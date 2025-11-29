@@ -1,0 +1,126 @@
+{% extends "customers/base.html" %}
+
+{% block customers_title %}Carga Masiva de Clientes{% endblock %}
+
+{% block customers_actions %}
+    <a href="{{ url_for('customers.customer_list') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver a Lista
+    </a>
+{% endblock %}
+
+{% block customers_content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-upload"></i> Carga Masiva de Clientes
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Instrucciones:</h6>
+                    <ol class="mb-0">
+                        <li>Descarga la plantilla CSV haciendo clic en el botón "Descargar Plantilla"</li>
+                        <li>Llena la plantilla con los datos de los clientes</li>
+                        <li>Sube el archivo CSV completado usando el formulario below</li>
+                        <li>Revisa que los datos sean correctos antes de confirmar</li>
+                    </ol>
+                </div>
+
+                <div class="text-center mb-4">
+                    <a href="{{ url_for('customers.download_template') }}" class="btn btn-success btn-lg">
+                        <i class="fas fa-download"></i> Descargar Plantilla CSV
+                    </a>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-exclamation-triangle"></i> Formato Requerido:</h6>
+                    <ul class="mb-0">
+                        <li><strong>ID_Cliente:</strong> Identificador único (ej: CLI-001)</li>
+                        <li><strong>Nombre_Legal:</strong> Razón social (obligatorio)</li>
+                        <li><strong>Nombre:</strong> Nombre comercial (obligatorio)</li>
+                        <li><strong>Pais:</strong> País existente en el sistema (obligatorio)</li>
+                        <li><strong>Moneda:</strong> Usar símbolos como MXN, USD, EUR, CLP (obligatorio)</li>
+                        <li><strong>Estado:</strong> 1 para activo, 0 para inactivo</li>
+                    </ul>
+                </div>
+
+                <form method="POST" action="{{ url_for('customers.process_bulk_upload') }}" enctype="multipart/form-data" id="uploadForm">
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">Seleccionar archivo CSV</label>
+                        <input class="form-control" type="file" id="csv_file" name="csv_file" 
+                               accept=".csv" required>
+                        <div class="form-text">Solo archivos CSV con el formato correcto</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary" disabled id="uploadBtn">
+                            <i class="fas fa-upload"></i> Procesar Carga Masiva
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-table"></i> Vista Previa Plantilla
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID_Cliente</th>
+                                <th>Nombre_Legal</th>
+                                <th>Nombre</th>
+                                <th>Pais</th>
+                                <th>Moneda</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>CLI-001</td>
+                                <td>Empresa ABC S.A.</td>
+                                <td>ABC Corp</td>
+                                <td>Mexico</td>
+                                <td>MXN</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>CLI-002</td>
+                                <td>Comercializadora XYZ S.A.</td>
+                                <td>XYZ Comercial</td>
+                                <td>Mexico</td>
+                                <td>MXN</td>
+                                <td>1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('csv_file');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            uploadBtn.disabled = false;
+        } else {
+            uploadBtn.disabled = true;
+        }
+    });
+});
+</script>
+{% endblock %}

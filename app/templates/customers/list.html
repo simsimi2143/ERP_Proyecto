@@ -1,0 +1,180 @@
+{% extends "customers/base.html" %}
+
+{% block customers_title %}Gestión de Clientes{% endblock %}
+
+{% block customers_actions %}
+    {% if current_user.has_permission('customers', 2) %}
+        <a href="{{ url_for('customers.customer_create') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nuevo Cliente
+        </a>
+        <a href="{{ url_for('customers.bulk_upload') }}" class="btn btn-info">
+            <i class="fas fa-upload"></i> Carga Masiva
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block customers_content %}
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-filter"></i> Filtros de Búsqueda
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('customers.customer_list') }}" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="id_customer" class="form-label">ID Cliente</label>
+                    <input type="text" class="form-control" id="id_customer" name="id_customer" 
+                           value="{{ filters.get('id_customer', '') }}" placeholder="Buscar por ID...">
+                </div>
+                <div class="col-md-3">
+                    <label for="name" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="name" name="name" 
+                           value="{{ filters.get('name', '') }}" placeholder="Buscar por nombre...">
+                </div>
+                <div class="col-md-3">
+                    <label for="country" class="form-label">País</label>
+                    <select class="form-select" id="country" name="country">
+                        <option value="">Todos los países</option>
+                        {% for country in countries %}
+                            <option value="{{ country.name }}" 
+                                    {% if filters.get('country') == country.name %}selected{% endif %}>
+                                {{ country.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Estado</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">Todos</option>
+                        <option value="true" {% if filters.get('status') == 'true' %}selected{% endif %}>Activo</option>
+                        <option value="false" {% if filters.get('status') == 'false' %}selected{% endif %}>Inactivo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Aplicar Filtros
+                    </button>
+                    <a href="{{ url_for('customers.customer_list') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                    <a href="{{ url_for('customers.export_csv', **filters) }}" class="btn btn-success">
+                        <i class="fas fa-file-export"></i> Exportar CSV
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Clientes -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-list"></i> Lista de Clientes
+            <span class="badge bg-primary ms-2">{{ customers|length }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if customers %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID Cliente</th>
+                        <th>Nombre Legal</th>
+                        <th>Nombre</th>
+                        <th>País</th>
+                        <th>Moneda</th>
+                        <th>Contacto</th>
+                        <th>Teléfono</th>
+                        <th>Email</th>
+                        <th>Estado</th>
+                        <th>Creado por</th>
+                        <th>Última Actualización</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>
+                            <strong>{{ customer.id_customer }}</strong>
+                        </td>
+                        <td>{{ customer.legal_name }}</td>
+                        <td>{{ customer.name }}</td>
+                        <td>
+                            <span class="badge bg-secondary">{{ customer.country }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ customer.currency }}</span>
+                        </td>
+                        <td>
+                            {% if customer.contact_name %}
+                                {{ customer.contact_name }}
+                                {% if customer.contact_role %}
+                                    <br><small class="text-muted">{{ customer.contact_role }}</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">No especificado</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ customer.phone or '-' }}</td>
+                        <td>{{ customer.email or '-' }}</td>
+                        <td>
+                            {% if customer.status %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ customer.created_by }}</td>
+                        <td>
+                            <small class="text-muted">{{ customer.updated_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if current_user.has_permission('customers', 2) %}
+                                    <a href="{{ url_for('customers.customer_edit', customer_id=customer.id) }}" 
+                                       class="btn btn-outline-warning" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ url_for('customers.customer_delete', customer_id=customer.id) }}" 
+                                          method="POST" class="d-inline">
+                                        <button type="submit" 
+                                                class="btn btn-outline-danger" 
+                                                onclick="return confirm('¿Estás seguro de eliminar este cliente?')"
+                                                title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted">Solo lectura</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+            <h5>No se encontraron clientes</h5>
+            <p class="text-muted">No hay clientes que coincidan con los filtros aplicados.</p>
+            {% if current_user.has_permission('customers', 2) %}
+                <a href="{{ url_for('customers.customer_create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Crear Primer Cliente
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

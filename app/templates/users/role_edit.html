@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Editar Rol: {{ role.name }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('users.role_edit', role_id=role.id) }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nombre del Rol</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ role.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ role.description }}</textarea>
+                    </div>
+                    
+                    <hr>
+                    <h5>Permisos por Módulo</h5>
+                    <p class="text-muted">0 = Sin acceso, 1 = Solo lectura, 2 = Lectura y escritura</p>
+                    
+                    <div class="row">
+                        {% set modules = [
+                            ('materials', 'Materiales', '📦'),
+                            ('inventory', 'Inventario', '📊'),
+                            ('customers', 'Clientes', '👨‍💼'),
+                            ('accounting', 'Contabilidad', '💰'),
+                            ('suppliers', 'Proveedores', '🏢'),
+                            ('reporting', 'Reportes', '📈'),
+                            ('purchases', 'Compras', '🛒'),
+                            ('sales', 'Ventas', '💳'),
+                            ('users', 'Usuarios', '👥')
+                        ] %}
+                        
+                        <!-- Materiales -->
+<div class="col-md-4 mb-3">
+    <label for="materials_permission" class="form-label">📦 Materiales</label>
+    <select class="form-select" id="materials_permission" name="materials_permission">
+        <option value="0" {% if role.materials_permission == 0 %}selected{% endif %}>Sin acceso</option>
+        <option value="1" {% if role.materials_permission == 1 %}selected{% endif %}>Solo lectura</option>
+        <option value="2" {% if role.materials_permission == 2 %}selected{% endif %}>Lectura y escritura</option>
+    </select>
+</div>
+
+<!-- Inventario -->
+<div class="col-md-4 mb-3">
+    <label for="inventory_permission" class="form-label">📊 Inventario</label>
+    <select class="form-select" id="inventory_permission" name="inventory_permission">
+        <option value="0" {% if role.inventory_permission == 0 %}selected{% endif %}>Sin acceso</option>
+        <option value="1" {% if role.inventory_permission == 1 %}selected{% endif %}>Solo lectura</option>
+        <option value="2" {% if role.inventory_permission == 2 %}selected{% endif %}>Lectura y escritura</option>
+    </select>
+</div>
+
+<!-- Clientes -->
+<div class="col-md-4 mb-3">
+    <label for="customers_permission" class="form-label">👨‍💼 Clientes</label>
+    <select class="form-select" id="customers_permission" name="customers_permission">
+        <option value="0" {% if role.customers_permission == 0 %}selected{% endif %}>Sin acceso</option>
+        <option value="1" {% if role.customers_permission == 1 %}selected{% endif %}>Solo lectura</option>
+        <option value="2" {% if role.customers_permission == 2 %}selected{% endif %}>Lectura y escritura</option>
+    </select>
+</div>
+
+<!-- Contabilidad -->
+<div class="col-md-4 mb-3">
+    <label for="accounting_permission" class="form-label">💰 Contabilidad</label>
+    <select class="form-select" id="accounting_permission" name="accounting_permission">
+        <option value="0" {% if role.accounting_permission == 0 %}selected{% endif %}>Sin acceso</option>
+        <option value="1" {% if role.accounting_permission == 1 %}selected{% endif %}>Solo lectura</option>
+        <option value="2" {% if role.accounting_permission == 2 %}selected{% endif %}>Lectura y escritura</option>
+    </select>
+</div>
+
+<!-- Proveedores -->
+<div class="col-md-4 mb-3">
+    <label for="suppliers_permission" class="form-label">🏢 Proveedores</label>
+    <select class="form-select" id="suppliers_permission" name="suppliers_permission">
+        <option value="0" {% if role.suppliers_permission == 0 %}selected{% endif %}>Sin acceso</option>
+        <option value="1" {% if role.suppliers_permission == 1 %}selected{% endif %}>Solo lectura</option>
+        <option value="2" {% if role.suppliers_permission == 2 %}selected{% endif %}>Lectura y escritura</option>
+    </select>
+</div>
+
+<!-- Reportes -->
+<div class="col-md-4 mb-3">
+    <label for="reporting_permission" class="form-label">📈 Reportes</label>
+    <select class="form-select" id="reporting_permission" name="reporting_permission">
+        <option value="0" {% if role.reporting_permission == 0 %}selected{% endif %}>Sin acceso</option>
+        <option value="1" {% if role.reporting_permission == 1 %}selected{% endif %}>Solo lectura</option>
+        <option value="2" {% if role.reporting_permission == 2 %}selected{% endif %}>Lectura y escritura</option>
+    </select>
+</div>
+
+<!-- Compras -->
+<div class="col-md-4 mb-3">
+    <label for="purchases_permission" class="form-label">🛒 Compras</label>
+    <select class="form-select" id="purchases_permission" name="purchases_permission">
+        <option value="0" {% if role.purchases_permission == 0 %}selected{% endif %}>Sin acceso</option>
+        <option value="1" {% if role.purchases_permission == 1 %}selected{% endif %}>Solo lectura</option>
+        <option value="2" {% if role.purchases_permission == 2 %}selected{% endif %}>Lectura y escritura</option>
+    </select>
+</div>
+
+<!-- Ventas -->
+<div class="col-md-4 mb-3">
+    <label for="sales_permission" class="form-label">💳 Ventas</label>
+    <select class="form-select" id="sales_permission" name="sales_permission">
+        <option value="0" {% if role.sales_permission == 0 %}selected{% endif %}>Sin acceso</option>
+        <option value="1" {% if role.sales_permission == 1 %}selected{% endif %}>Solo lectura</option>
+        <option value="2" {% if role.sales_permission == 2 %}selected{% endif %}>Lectura y escritura</option>
+    </select>
+</div>
+
+<!-- Usuarios -->
+<div class="col-md-4 mb-3">
+    <label for="users_permission" class="form-label">👥 Usuarios</label>
+    <select class="form-select" id="users_permission" name="users_permission">
+        <option value="0" {% if role.users_permission == 0 %}selected{% endif %}>Sin acceso</option>
+        <option value="1" {% if role.users_permission == 1 %}selected{% endif %}>Solo lectura</option>
+        <option value="2" {% if role.users_permission == 2 %}selected{% endif %}>Lectura y escritura</option>
+    </select>
+</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Actualizar Rol</button>
+                        <a href="{{ url_for('users.role_list') }}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

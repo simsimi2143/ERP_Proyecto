@@ -1,0 +1,79 @@
+{% extends "materials/base.html" %}
+
+{% block materials_title %}Crear Nuevo Material{% endblock %}
+
+{% block materials_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus-circle"></i> Nuevo Material
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('materials.material_create') }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="id_material" class="form-label">ID Material *</label>
+                            <input type="text" class="form-control" id="id_material" name="id_material" 
+                                   required maxlength="50" placeholder="Ej: MAT-001">
+                            <div class="form-text">Identificador único del material</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   required maxlength="200" placeholder="Nombre del material">
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="description" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="description" name="description" 
+                                      rows="3" placeholder="Descripción detallada del material"></textarea>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="unit" class="form-label">Unidad *</label>
+                            <select class="form-select" id="unit" name="unit" required>
+                                <option value="">Seleccionar unidad...</option>
+                                {% for unit in units %}
+                                    <option value="{{ unit.symbol }}">{{ unit.name }} ({{ unit.symbol }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="type" class="form-label">Tipo *</label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="">Seleccionar tipo...</option>
+                                {% for material_type in material_types %}
+                                    <option value="{{ material_type.name }}">{{ material_type.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="status" name="status" checked>
+                                <label class="form-check-label" for="status">Material activo</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Material
+                            </button>
+                            <a href="{{ url_for('materials.material_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

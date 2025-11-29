@@ -1,0 +1,157 @@
+{% extends "customers/base.html" %}
+
+{% block customers_title %}Crear Nuevo Cliente{% endblock %}
+
+{% block customers_content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus-circle"></i> Nuevo Cliente
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('customers.customer_create') }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="id_customer" class="form-label">ID Cliente *</label>
+                            <input type="text" class="form-control" id="id_customer" name="id_customer" 
+                                   required maxlength="50" placeholder="Ej: CLI-001">
+                            <div class="form-text">Identificador único del cliente</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="legal_name" class="form-label">Nombre Legal *</label>
+                            <input type="text" class="form-control" id="legal_name" name="legal_name" 
+                                   required maxlength="200" placeholder="Razón social">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Nombre Comercial *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   required maxlength="200" placeholder="Nombre comercial">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="country" class="form-label">País *</label>
+                            <select class="form-select" id="country" name="country" required>
+                                <option value="">Seleccionar país...</option>
+                                {% for country in countries %}
+                                    <option value="{{ country.name }}">{{ country.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="currency" class="form-label">Moneda *</label>
+                            <select class="form-select" id="currency" name="currency" required>
+                                <option value="">Seleccionar moneda...</option>
+                                {% for currency in currencies %}
+                                    <option value="{{ currency.name }}">{{ currency.name }} ({{ currency.symbol }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="text_id" class="form-label">Identificación Tributaria</label>
+                            <input type="text" class="form-control" id="text_id" name="text_id" 
+                                   maxlength="100" placeholder="RFC, NIT, etc.">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="state_province" class="form-label">Estado/Provincia</label>
+                            <input type="text" class="form-control" id="state_province" name="state_province" 
+                                   maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="city" class="form-label">Ciudad</label>
+                            <input type="text" class="form-control" id="city" name="city" 
+                                   maxlength="100">
+                        </div>
+
+                        <div class="col-12">
+                            <label for="address" class="form-label">Dirección</label>
+                            <textarea class="form-control" id="address" name="address" 
+                                      rows="2" placeholder="Dirección completa"></textarea>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="zip_code" class="form-label">Código Postal</label>
+                            <input type="text" class="form-control" id="zip_code" name="zip_code" 
+                                   maxlength="20">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="phone" class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" id="phone" name="phone" 
+                                   maxlength="20">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   maxlength="120">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="contact_name" class="form-label">Nombre de Contacto</label>
+                            <input type="text" class="form-control" id="contact_name" name="contact_name" 
+                                   maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="contact_role" class="form-label">Rol del Contacto</label>
+                            <input type="text" class="form-control" id="contact_role" name="contact_role" 
+                                   maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="category" class="form-label">Categoría</label>
+                            <input type="text" class="form-control" id="category" name="category" 
+                                   maxlength="100" placeholder="Ej: Retail, Distribución">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="payment_method" class="form-label">Método de Pago</label>
+                            <input type="text" class="form-control" id="payment_method" name="payment_method" 
+                                   maxlength="100" placeholder="Ej: Transferencia, Cheque">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="payments_terms" class="form-label">Términos de Pago</label>
+                            <input type="text" class="form-control" id="payments_terms" name="payments_terms" 
+                                   maxlength="200" placeholder="Ej: 30 días">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="bank_account" class="form-label">Cuenta Bancaria</label>
+                            <input type="text" class="form-control" id="bank_account" name="bank_account" 
+                                   maxlength="100">
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="status" name="status" checked>
+                                <label class="form-check-label" for="status">Cliente activo</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Cliente
+                            </button>
+                            <a href="{{ url_for('customers.customer_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

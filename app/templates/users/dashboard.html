@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+    <div class="d-flex align-items-center">
+        <img src="{{ url_for('static', filename=config.LOGO_NAVBAR) }}" 
+             alt="{{ config.APP_NAME }}" 
+             class="dashboard-logo"
+             onerror="this.style.display='none'">
+        <div>
+            <h2 class="mb-1">{{ config.APP_NAME }}</h2>
+            <p class="text-muted mb-0">Panel de Control Principal</p>
+        </div>
+    </div>
+    <div class="text-end">
+        <span class="badge bg-success fs-6">Conectado como: {{ current_user.username }}</span>
+        {% if current_user.is_superuser %}
+            <span class="badge bg-warning ms-1">Superadmin</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Información rápida del sistema -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">👥 Usuarios</h5>
+                <p class="card-text">Total en sistema</p>
+                <h3>{{ total_users }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">🔐 Roles</h5>
+                <p class="card-text">Roles definidos</p>
+                <h3>{{ total_roles }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">📊 Sistema</h5>
+                <p class="card-text">Módulos activos</p>
+                <h3>{{ active_modules }}/{{ total_modules }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-dark">
+            <div class="card-body">
+                <h5 class="card-title">⚡ Estado</h5>
+                <p class="card-text">Nivel de Permisos</p>
+                <h3>
+                    {% if current_user.is_superuser %}
+                        🔓 Completo
+                    {% elif active_modules == total_modules %}
+                        ✅ Total
+                    {% elif active_modules > total_modules // 2 %}
+                        📈 Alto
+                    {% else %}
+                        🔐 Limitado
+                    {% endif %}
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Módulos del ERP -->
+<h3 class="mb-3">Módulos Disponibles</h3>
+<div class="row">
+    <!-- Módulo de Usuarios -->
+    {% if current_user.has_permission('users', 1) %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">👥 Usuarios</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Gestión de usuarios, roles y permisos del sistema</p>
+                <div class="mb-2">
+                    <small class="text-muted">Tu permiso: 
+                        {% if current_user.has_permission('users', 2) %}
+                            <span class="badge bg-success">Completo</span>
+                        {% else %}
+                            <span class="badge bg-info">Solo lectura</span>
+                        {% endif %}
+                    </small>
+                </div>
+                <div class="btn-group w-100" role="group">
+                    <a href="{{ url_for('users.user_list') }}" class="btn btn-outline-primary btn-sm">Usuarios</a>
+                    <a href="{{ url_for('users.role_list') }}" class="btn btn-outline-primary btn-sm">Roles</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Módulo de Materiales -->
+    {% if current_user.has_permission('materials', 1) %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">📦 Materiales</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Gestión de materiales y productos del inventario</p>
+                <div class="mb-2">
+                    <small class="text-muted">Tu permiso: 
+                        {% if current_user.has_permission('materials', 2) %}
+                            <span class="badge bg-success">Completo</span>
+                        {% else %}
+                            <span class="badge bg-info">Solo lectura</span>
+                        {% endif %}
+                    </small>
+                </div>
+                <a href="{{ url_for('materials.material_list') }}" class="btn btn-primary w-100">Acceder al Módulo</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Módulo de Inventario -->
+    {% if current_user.has_permission('inventory', 1) %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">📊 Inventario</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Control de stock, existencias y movimientos de inventario</p>
+                <div class="mb-2">
+                    <small class="text-muted">Tu permiso: 
+                        {% if current_user.has_permission('inventory', 2) %}
+                            <span class="badge bg-success">Completo</span>
+                        {% else %}
+                            <span class="badge bg-info">Solo lectura</span>
+                        {% endif %}
+                    </small>
+                </div>
+                <a href="#" class="btn btn-primary w-100">Acceder al Módulo</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Módulo de Clientes -->
+    {% if current_user.has_permission('customers', 1) %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-white">
+                <h5 class="card-title mb-0">👨‍💼 Clientes</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Gestión de base de clientes, contactos y historial</p>
+                <div class="mb-2">
+                    <small class="text-muted">Tu permiso: 
+                        {% if current_user.has_permission('customers', 2) %}
+                            <span class="badge bg-success">Completo</span>
+                        {% else %}
+                            <span class="badge bg-info">Solo lectura</span>
+                        {% endif %}
+                    </small>
+                </div>
+                <a href="{{ url_for('customers.customer_list') }}" class="btn btn-primary w-100">Acceder al Módulo</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Módulo de Contabilidad -->
+    {% if current_user.has_permission('accounting', 1) %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">💰 Contabilidad</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Sistema contable, facturación y estados financieros</p>
+                <div class="mb-2">
+                    <small class="text-muted">Tu permiso: 
+                        {% if current_user.has_permission('accounting', 2) %}
+                            <span class="badge bg-success">Completo</span>
+                        {% else %}
+                            <span class="badge bg-info">Solo lectura</span>
+                        {% endif %}
+                    </small>
+                </div>
+                <a href="#" class="btn btn-primary w-100">Acceder al Módulo</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Módulo de Proveedores -->
+    {% if current_user.has_permission('suppliers', 1) %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">🏢 Proveedores</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Gestión de proveedores, compras y relaciones comerciales</p>
+                <div class="mb-2">
+                    <small class="text-muted">Tu permiso: 
+                        {% if current_user.has_permission('suppliers', 2) %}
+                            <span class="badge bg-success">Completo</span>
+                        {% else %}
+                            <span class="badge bg-info">Solo lectura</span>
+                        {% endif %}
+                    </small>
+                </div>
+                <a href="{{ url_for('suppliers.supplier_list') }}" class="btn btn-primary w-100">Acceder al Módulo</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Módulo de Reportes -->
+    {% if current_user.has_permission('reporting', 1) %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">📈 Reportes</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Generación de reportes, análisis y Business Intelligence</p>
+                <div class="mb-2">
+                    <small class="text-muted">Tu permiso: 
+                        {% if current_user.has_permission('reporting', 2) %}
+                            <span class="badge bg-success">Completo</span>
+                        {% else %}
+                            <span class="badge bg-info">Solo lectura</span>
+                        {% endif %}
+                    </small>
+                </div>
+                <a href="#" class="btn btn-primary w-100">Acceder al Módulo</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Módulo de Compras -->
+    {% if current_user.has_permission('purchases', 1) %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">🛒 Compras</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Gestión de órdenes de compra, cotizaciones y proveedores</p>
+                <div class="mb-2">
+                    <small class="text-muted">Tu permiso: 
+                        {% if current_user.has_permission('purchases', 2) %}
+                            <span class="badge bg-success">Completo</span>
+                        {% else %}
+                            <span class="badge bg-info">Solo lectura</span>
+                        {% endif %}
+                    </small>
+                </div>
+                <a href="#" class="btn btn-primary w-100">Acceder al Módulo</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Módulo de Ventas -->
+    {% if current_user.has_permission('sales', 1) %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">💳 Ventas</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Gestión de ventas, pedidos, clientes y facturación</p>
+                <div class="mb-2">
+                    <small class="text-muted">Tu permiso: 
+                        {% if current_user.has_permission('sales', 2) %}
+                            <span class="badge bg-success">Completo</span>
+                        {% else %}
+                            <span class="badge bg-info">Solo lectura</span>
+                        {% endif %}
+                    </small>
+                </div>
+                <a href="#" class="btn btn-primary w-100">Acceder al Módulo</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Mensaje si no hay módulos disponibles -->
+{% if active_modules == 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-lock fa-3x text-muted mb-3"></i>
+                <h4>No tienes acceso a ningún módulo</h4>
+                <p class="text-muted">Contacta al administrador del sistema para solicitar permisos.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Resumen de permisos (opcional - puedes eliminar esta sección si no la necesitas) -->
+{% if active_modules > 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">📊 Resumen de tus Permisos</h5>
+                <span class="badge bg-primary">{{ active_modules }}/{{ total_modules }} módulos activos</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% set modules = [
+                        ('users', '👥 Usuarios'),
+                        ('materials', '📦 Materiales'),
+                        ('inventory', '📊 Inventario'),
+                        ('customers', '👨‍💼 Clientes'),
+                        ('accounting', '💰 Contabilidad'),
+                        ('suppliers', '🏢 Proveedores'),
+                        ('reporting', '📈 Reportes'),
+                        ('purchases', '🛒 Compras'),
+                        ('sales', '💳 Ventas')
+                    ] %}
+                    
+                    {% for module, name in modules %}
+                    {% if current_user.has_permission(module, 1) %}
+                    <div class="col-md-4 mb-2">
+                        <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                            <span>{{ name }}</span>
+                            <span>
+                                {% if current_user.has_permission(module, 2) %}
+                                    <span class="badge bg-success">Completo</span>
+                                {% else %}
+                                    <span class="badge bg-info">Solo lectura</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

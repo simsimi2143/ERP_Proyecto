@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Crear Nuevo Rol</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('users.role_create') }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nombre del Rol</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <hr>
+                    <h5>Permisos por Módulo</h5>
+                    <p class="text-muted">0 = Sin acceso, 1 = Solo lectura, 2 = Lectura y escritura</p>
+                    
+                    <div class="row">
+                        {% set modules = [
+                            ('materials', 'Materiales', '📦'),
+                            ('inventory', 'Inventario', '📊'),
+                            ('customers', 'Clientes', '👨‍💼'),
+                            ('accounting', 'Contabilidad', '💰'),
+                            ('suppliers', 'Proveedores', '🏢'),
+                            ('reporting', 'Reportes', '📈'),
+                            ('purchases', 'Compras', '🛒'),
+                            ('sales', 'Ventas', '💳'),
+                            ('users', 'Usuarios', '👥')
+                        ] %}
+                        
+                        {% for module, label, icon in modules %}
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ module }}_permission" class="form-label">{{ icon }} {{ label }}</label>
+                            <select class="form-select" id="{{ module }}_permission" name="{{ module }}_permission">
+                                <option value="0">Sin acceso</option>
+                                <option value="1">Solo lectura</option>
+                                <option value="2">Lectura y escritura</option>
+                            </select>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Crear Rol</button>
+                        <a href="{{ url_for('users.role_list') }}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

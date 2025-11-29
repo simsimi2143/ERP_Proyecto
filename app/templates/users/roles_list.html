@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Gestión de Roles</h2>
+    {% if current_user.has_permission('users', 2) %}
+        <a href="{{ url_for('users.role_create') }}" class="btn btn-success">➕ Crear Rol</a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Usuarios</th>
+                        <th>Permisos</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for role in roles %}
+                    <tr>
+                        <td>{{ role.id }}</td>
+                        <td>
+                            <strong>{{ role.name }}</strong>
+                            {% if role.name == 'Superadmin' %}
+                                <span class="badge bg-danger">Sistema</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ role.description or 'Sin descripción' }}</td>
+                        <td>
+                            <span class="badge bg-primary">{{ role.users.count() }} usuario(s)</span>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                <!-- Materiales -->
+                                {% if role.materials_permission > 0 %}
+                                    <span class="badge {% if role.materials_permission == 2 %}bg-success{% else %}bg-info{% endif %}" 
+                                          title="Materiales: {% if role.materials_permission == 1 %}Lectura{% else %}Completo{% endif %}">
+                                        📦 {% if role.materials_permission == 2 %}⚡{% endif %}
+                                    </span>
+                                {% endif %}
+                                
+                                <!-- Inventario -->
+                                {% if role.inventory_permission > 0 %}
+                                    <span class="badge {% if role.inventory_permission == 2 %}bg-success{% else %}bg-info{% endif %}" 
+                                          title="Inventario: {% if role.inventory_permission == 1 %}Lectura{% else %}Completo{% endif %}">
+                                        📊 {% if role.inventory_permission == 2 %}⚡{% endif %}
+                                    </span>
+                                {% endif %}
+                                
+                                <!-- Clientes -->
+                                {% if role.customers_permission > 0 %}
+                                    <span class="badge {% if role.customers_permission == 2 %}bg-success{% else %}bg-info{% endif %}" 
+                                          title="Clientes: {% if role.customers_permission == 1 %}Lectura{% else %}Completo{% endif %}">
+                                        👨‍💼 {% if role.customers_permission == 2 %}⚡{% endif %}
+                                    </span>
+                                {% endif %}
+                                
+                                <!-- Contabilidad -->
+                                {% if role.accounting_permission > 0 %}
+                                    <span class="badge {% if role.accounting_permission == 2 %}bg-success{% else %}bg-info{% endif %}" 
+                                          title="Contabilidad: {% if role.accounting_permission == 1 %}Lectura{% else %}Completo{% endif %}">
+                                        💰 {% if role.accounting_permission == 2 %}⚡{% endif %}
+                                    </span>
+                                {% endif %}
+                                
+                                <!-- Proveedores -->
+                                {% if role.suppliers_permission > 0 %}
+                                    <span class="badge {% if role.suppliers_permission == 2 %}bg-success{% else %}bg-info{% endif %}" 
+                                          title="Proveedores: {% if role.suppliers_permission == 1 %}Lectura{% else %}Completo{% endif %}">
+                                        🏢 {% if role.suppliers_permission == 2 %}⚡{% endif %}
+                                    </span>
+                                {% endif %}
+                                
+                                <!-- Reportes -->
+                                {% if role.reporting_permission > 0 %}
+                                    <span class="badge {% if role.reporting_permission == 2 %}bg-success{% else %}bg-info{% endif %}" 
+                                          title="Reportes: {% if role.reporting_permission == 1 %}Lectura{% else %}Completo{% endif %}">
+                                        📈 {% if role.reporting_permission == 2 %}⚡{% endif %}
+                                    </span>
+                                {% endif %}
+                                
+                                <!-- Compras -->
+                                {% if role.purchases_permission > 0 %}
+                                    <span class="badge {% if role.purchases_permission == 2 %}bg-success{% else %}bg-info{% endif %}" 
+                                          title="Compras: {% if role.purchases_permission == 1 %}Lectura{% else %}Completo{% endif %}">
+                                        🛒 {% if role.purchases_permission == 2 %}⚡{% endif %}
+                                    </span>
+                                {% endif %}
+                                
+                                <!-- Ventas -->
+                                {% if role.sales_permission > 0 %}
+                                    <span class="badge {% if role.sales_permission == 2 %}bg-success{% else %}bg-info{% endif %}" 
+                                          title="Ventas: {% if role.sales_permission == 1 %}Lectura{% else %}Completo{% endif %}">
+                                        💳 {% if role.sales_permission == 2 %}⚡{% endif %}
+                                    </span>
+                                {% endif %}
+                                
+                                <!-- Usuarios -->
+                                {% if role.users_permission > 0 %}
+                                    <span class="badge {% if role.users_permission == 2 %}bg-success{% else %}bg-info{% endif %}" 
+                                          title="Usuarios: {% if role.users_permission == 1 %}Lectura{% else %}Completo{% endif %}">
+                                        👥 {% if role.users_permission == 2 %}⚡{% endif %}
+                                    </span>
+                                {% endif %}
+                                
+                                {% if role.materials_permission == 0 and 
+                                      role.inventory_permission == 0 and 
+                                      role.customers_permission == 0 and 
+                                      role.accounting_permission == 0 and 
+                                      role.suppliers_permission == 0 and 
+                                      role.reporting_permission == 0 and 
+                                      role.purchases_permission == 0 and 
+                                      role.sales_permission == 0 and 
+                                      role.users_permission == 0 %}
+                                    <span class="badge bg-secondary">Sin permisos</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                {% if current_user.has_permission('users', 2) %}
+                                    <a href="{{ url_for('users.role_edit', role_id=role.id) }}" 
+                                       class="btn btn-sm btn-warning"
+                                       title="Editar rol">
+                                        ✏️ Editar
+                                    </a>
+                                    
+                                    {% if role.name != 'Superadmin' and role.users.count() == 0 %}
+                                        <form action="{{ url_for('users.role_delete', role_id=role.id) }}" 
+                                              method="POST" 
+                                              class="d-inline">
+                                            <button type="submit" 
+                                                    class="btn btn-sm btn-danger" 
+                                                    onclick="return confirm('¿Estás seguro de que quieres eliminar el rol {{ role.name }}? Esta acción no se puede deshacer.')"
+                                                    title="Eliminar rol">
+                                                🗑️ Eliminar
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-danger" 
+                                                disabled 
+                                                title="{% if role.name == 'Superadmin' %}No se puede eliminar el rol Superadmin{% else %}No se puede eliminar un rol con usuarios asignados{% endif %}">
+                                            🗑️ Eliminar
+                                        </button>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Solo lectura</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Información de resumen - SIMPLIFICADA -->
+        <div class="mt-3">
+            <small class="text-muted">
+                Total de roles: <strong>{{ roles|length }}</strong> | 
+                Roles en uso: <strong>
+                    {% set count_roles_en_uso = 0 %}
+                    {% for role in roles %}
+                        {% if role.users.count() > 0 %}
+                            {% set count_roles_en_uso = count_roles_en_uso + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ count_roles_en_uso }}
+                </strong> | 
+                Roles del sistema: <strong>1</strong>
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Leyenda de permisos -->
+<div class="alert alert-info mt-3">
+    <h6>📋 Leyenda de permisos:</h6>
+    <div class="row">
+        <div class="col-md-6">
+            <strong>Iconos de módulos:</strong>
+            <ul class="mb-2">
+                <li>📦 Materiales | 📊 Inventario | 👨‍💼 Clientes</li>
+                <li>💰 Contabilidad | 🏢 Proveedores | 📈 Reportes</li>
+                <li>🛒 Compras | 💳 Ventas | 👥 Usuarios</li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <strong>Niveles de permiso:</strong>
+            <ul class="mb-0">
+                <li><span class="badge bg-info">Icono</span> = Solo lectura (Nivel 1)</li>
+                <li><span class="badge bg-success">Icono⚡</span> = Lectura y escritura (Nivel 2)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

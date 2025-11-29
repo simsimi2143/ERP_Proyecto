@@ -1,0 +1,164 @@
+{% extends "suppliers/base.html" %}
+
+{% block suppliers_title %}Editar Proveedor: {{ supplier.name }}{% endblock %}
+
+{% block suppliers_content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit"></i> Editar Proveedor: {{ supplier.id_suplier }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('suppliers.supplier_edit', supplier_id=supplier.id) }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="id_suplier" class="form-label">ID Proveedor *</label>
+                            <input type="text" class="form-control" id="id_suplier" name="id_suplier" 
+                                   value="{{ supplier.id_suplier }}" required maxlength="50">
+                            <div class="form-text">Identificador único del proveedor</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="legal_name" class="form-label">Nombre Legal *</label>
+                            <input type="text" class="form-control" id="legal_name" name="legal_name" 
+                                   value="{{ supplier.legal_name }}" required maxlength="200">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Nombre Comercial *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ supplier.name }}" required maxlength="200">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="country" class="form-label">País *</label>
+                            <select class="form-select" id="country" name="country" required>
+                                <option value="">Seleccionar país...</option>
+                                {% for country in countries %}
+                                    <option value="{{ country.name }}" 
+                                            {% if supplier.country == country.name %}selected{% endif %}>
+                                        {{ country.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="currency" class="form-label">Moneda *</label>
+                            <select class="form-select" id="currency" name="currency" required>
+                                <option value="">Seleccionar moneda...</option>
+                                {% for currency in currencies %}
+                                    <option value="{{ currency.name }}" 
+                                            {% if supplier.currency == currency.name %}selected{% endif %}>
+                                        {{ currency.name }} ({{ currency.symbol }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="text_id" class="form-label">Identificación Tributaria</label>
+                            <input type="text" class="form-control" id="text_id" name="text_id" 
+                                   value="{{ supplier.text_id or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="state_province" class="form-label">Estado/Provincia</label>
+                            <input type="text" class="form-control" id="state_province" name="state_province" 
+                                   value="{{ supplier.state_province or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="city" class="form-label">Ciudad</label>
+                            <input type="text" class="form-control" id="city" name="city" 
+                                   value="{{ supplier.city or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-12">
+                            <label for="address" class="form-label">Dirección</label>
+                            <textarea class="form-control" id="address" name="address" 
+                                      rows="2">{{ supplier.address or '' }}</textarea>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="zip_code" class="form-label">Código Postal</label>
+                            <input type="text" class="form-control" id="zip_code" name="zip_code" 
+                                   value="{{ supplier.zip_code or '' }}" maxlength="20">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="phone" class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" id="phone" name="phone" 
+                                   value="{{ supplier.phone or '' }}" maxlength="20">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ supplier.email or '' }}" maxlength="120">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="contact_name" class="form-label">Nombre de Contacto</label>
+                            <input type="text" class="form-control" id="contact_name" name="contact_name" 
+                                   value="{{ supplier.contact_name or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="contact_role" class="form-label">Rol del Contacto</label>
+                            <input type="text" class="form-control" id="contact_role" name="contact_role" 
+                                   value="{{ supplier.contact_role or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="category" class="form-label">Categoría</label>
+                            <input type="text" class="form-control" id="category" name="category" 
+                                   value="{{ supplier.category or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="payment_method" class="form-label">Método de Pago</label>
+                            <input type="text" class="form-control" id="payment_method" name="payment_method" 
+                                   value="{{ supplier.payment_method or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="payments_terms" class="form-label">Términos de Pago</label>
+                            <input type="text" class="form-control" id="payments_terms" name="payments_terms" 
+                                   value="{{ supplier.payments_terms or '' }}" maxlength="200">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="bank_account" class="form-label">Cuenta Bancaria</label>
+                            <input type="text" class="form-control" id="bank_account" name="bank_account" 
+                                   value="{{ supplier.bank_account or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="status" name="status" 
+                                       {% if supplier.status %}checked{% endif %}>
+                                <label class="form-check-label" for="status">Proveedor activo</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Actualizar Proveedor
+                            </button>
+                            <a href="{{ url_for('suppliers.supplier_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

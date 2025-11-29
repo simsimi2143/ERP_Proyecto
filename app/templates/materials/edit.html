@@ -1,0 +1,86 @@
+{% extends "materials/base.html" %}
+
+{% block materials_title %}Editar Material: {{ material.name }}{% endblock %}
+
+{% block materials_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit"></i> Editar Material: {{ material.id_material }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('materials.material_edit', material_id=material.id) }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="id_material" class="form-label">ID Material *</label>
+                            <input type="text" class="form-control" id="id_material" name="id_material" 
+                                   value="{{ material.id_material }}" required maxlength="50">
+                            <div class="form-text">Identificador único del material</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ material.name }}" required maxlength="200">
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="description" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="description" name="description" 
+                                      rows="3">{{ material.description or '' }}</textarea>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="unit" class="form-label">Unidad *</label>
+                            <select class="form-select" id="unit" name="unit" required>
+                                <option value="">Seleccionar unidad...</option>
+                                {% for unit in units %}
+                                    <option value="{{ unit.symbol }}" 
+                                            {% if material.unit == unit.symbol %}selected{% endif %}>
+                                        {{ unit.name }} ({{ unit.symbol }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="type" class="form-label">Tipo *</label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="">Seleccionar tipo...</option>
+                                {% for material_type in material_types %}
+                                    <option value="{{ material_type.name }}" 
+                                            {% if material.type == material_type.name %}selected{% endif %}>
+                                        {{ material_type.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="status" name="status" 
+                                       {% if material.status %}checked{% endif %}>
+                                <label class="form-check-label" for="status">Material activo</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Actualizar Material
+                            </button>
+                            <a href="{{ url_for('materials.material_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

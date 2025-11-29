@@ -1,0 +1,164 @@
+{% extends "customers/base.html" %}
+
+{% block customers_title %}Editar Cliente: {{ customer.name }}{% endblock %}
+
+{% block customers_content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit"></i> Editar Cliente: {{ customer.id_customer }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('customers.customer_edit', customer_id=customer.id) }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="id_customer" class="form-label">ID Cliente *</label>
+                            <input type="text" class="form-control" id="id_customer" name="id_customer" 
+                                   value="{{ customer.id_customer }}" required maxlength="50">
+                            <div class="form-text">Identificador único del cliente</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="legal_name" class="form-label">Nombre Legal *</label>
+                            <input type="text" class="form-control" id="legal_name" name="legal_name" 
+                                   value="{{ customer.legal_name }}" required maxlength="200">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Nombre Comercial *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ customer.name }}" required maxlength="200">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="country" class="form-label">País *</label>
+                            <select class="form-select" id="country" name="country" required>
+                                <option value="">Seleccionar país...</option>
+                                {% for country in countries %}
+                                    <option value="{{ country.name }}" 
+                                            {% if customer.country == country.name %}selected{% endif %}>
+                                        {{ country.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="currency" class="form-label">Moneda *</label>
+                            <select class="form-select" id="currency" name="currency" required>
+                                <option value="">Seleccionar moneda...</option>
+                                {% for currency in currencies %}
+                                    <option value="{{ currency.name }}" 
+                                            {% if customer.currency == currency.name %}selected{% endif %}>
+                                        {{ currency.name }} ({{ currency.symbol }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="text_id" class="form-label">Identificación Tributaria</label>
+                            <input type="text" class="form-control" id="text_id" name="text_id" 
+                                   value="{{ customer.text_id or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="state_province" class="form-label">Estado/Provincia</label>
+                            <input type="text" class="form-control" id="state_province" name="state_province" 
+                                   value="{{ customer.state_province or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="city" class="form-label">Ciudad</label>
+                            <input type="text" class="form-control" id="city" name="city" 
+                                   value="{{ customer.city or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-12">
+                            <label for="address" class="form-label">Dirección</label>
+                            <textarea class="form-control" id="address" name="address" 
+                                      rows="2">{{ customer.address or '' }}</textarea>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="zip_code" class="form-label">Código Postal</label>
+                            <input type="text" class="form-control" id="zip_code" name="zip_code" 
+                                   value="{{ customer.zip_code or '' }}" maxlength="20">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="phone" class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" id="phone" name="phone" 
+                                   value="{{ customer.phone or '' }}" maxlength="20">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ customer.email or '' }}" maxlength="120">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="contact_name" class="form-label">Nombre de Contacto</label>
+                            <input type="text" class="form-control" id="contact_name" name="contact_name" 
+                                   value="{{ customer.contact_name or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="contact_role" class="form-label">Rol del Contacto</label>
+                            <input type="text" class="form-control" id="contact_role" name="contact_role" 
+                                   value="{{ customer.contact_role or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="category" class="form-label">Categoría</label>
+                            <input type="text" class="form-control" id="category" name="category" 
+                                   value="{{ customer.category or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="payment_method" class="form-label">Método de Pago</label>
+                            <input type="text" class="form-control" id="payment_method" name="payment_method" 
+                                   value="{{ customer.payment_method or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="payments_terms" class="form-label">Términos de Pago</label>
+                            <input type="text" class="form-control" id="payments_terms" name="payments_terms" 
+                                   value="{{ customer.payments_terms or '' }}" maxlength="200">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="bank_account" class="form-label">Cuenta Bancaria</label>
+                            <input type="text" class="form-control" id="bank_account" name="bank_account" 
+                                   value="{{ customer.bank_account or '' }}" maxlength="100">
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="status" name="status" 
+                                       {% if customer.status %}checked{% endif %}>
+                                <label class="form-check-label" for="status">Cliente activo</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Actualizar Cliente
+                            </button>
+                            <a href="{{ url_for('customers.customer_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
