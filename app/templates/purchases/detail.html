@@ -1,0 +1,186 @@
+{% extends "purchases/base.html" %}
+
+{% block purchases_title %}Detalle de Orden de Compra: {{ order.id_purchase_order }}{% endblock %}
+
+{% block purchases_actions %}
+    <a href="{{ url_for('purchases.purchase_list') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver a Lista
+    </a>
+    {% if current_user.has_permission('purchases', 2) %}
+        <a href="{{ url_for('purchases.purchase_edit', order_id=order.id_purchase_order) }}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Editar
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block purchases_content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Información General
+                </h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <th width="40%">ID Orden de Compra:</th>
+                        <td>{{ order.id_purchase_order }}</td>
+                    </tr>
+                    <tr>
+                        <th>Proveedor:</th>
+                        <td>
+                            {{ supplier.name }} ({{ supplier.id_suplier }})
+                            {% if supplier.contact_name %}
+                                <br><small>Contacto: {{ supplier.contact_name }} ({{ supplier.contact_role }})</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Fecha Emisión:</th>
+                        <td>{{ order.issue_date.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Fecha Entrega Estimada:</th>
+                        <td>{{ order.estimated_delivery_date.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Estado:</th>
+                        <td>
+                            {% if order.status == 'Pendiente' %}
+                                <span class="badge bg-warning">Pendiente</span>
+                            {% elif order.status == 'Aprobada' %}
+                                <span class="badge bg-info">Aprobada</span>
+                            {% elif order.status == 'Enviada' %}
+                                <span class="badge bg-primary">Enviada</span>
+                            {% elif order.status == 'Recibida' %}
+                                <span class="badge bg-success">Recibida</span>
+                            {% elif order.status == 'Cancelada' %}
+                                <span class="badge bg-danger">Cancelada</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Monto Total:</th>
+                        <td><strong>{{ "%.2f"|format(order.total_amount) }} {{ order.currency }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Moneda:</th>
+                        <td>{{ order.currency }}</td>
+                    </tr>
+                    <tr>
+                        <th>Notas:</th>
+                        <td>{{ order.notes or 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Creado por:</th>
+                        <td>{{ order.created_by }}</td>
+                    </tr>
+                    <tr>
+                        <th>Última Actualización:</th>
+                        <td>{{ order.updated_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list"></i> Líneas de la Orden ({{ lines|length }})
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if lines %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Material</th>
+                                <th>Cantidad</th>
+                                <th>Precio Unit.</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in lines %}
+                            <tr>
+                                <td>{{ line.position }}</td>
+                                <td>
+                                    <strong>{{ material_dict[line.id_material].name }}</strong>
+                                    <br><small class="text-muted">{{ line.id_material }}</small>
+                                    {% if material_dict[line.id_material].description %}
+                                        <br><small class="text-muted">{{ material_dict[line.id_material].description[:50] }}{% if material_dict[line.id_material].description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ line.quantity }} {{ line.unit_material }}</td>
+                                <td>{{ "%.2f"|format(line.price) }} {{ line.currency_suppliers }}</td>
+                                <td>{{ "%.2f"|format(line.quantity * line.price) }} {{ line.currency_suppliers }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                                <td><strong>{{ "%.2f"|format(order.total_amount) }} {{ order.currency }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">No hay líneas en esta orden de compra.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Información del Proveedor -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-truck"></i> Información del Proveedor
+                </h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th>Nombre Legal:</th>
+                        <td>{{ supplier.legal_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>País:</th>
+                        <td>{{ supplier.country }}</td>
+                    </tr>
+                    <tr>
+                        <th>Contacto:</th>
+                        <td>
+                            {% if supplier.contact_name %}
+                                {{ supplier.contact_name }}
+                                {% if supplier.contact_role %}
+                                    <br><small class="text-muted">{{ supplier.contact_role }}</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">No especificado</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ supplier.email or 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Teléfono:</th>
+                        <td>{{ supplier.phone or 'N/A' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends "purchases/base.html" %}
+
+{% block purchases_title %}Gestión de Órdenes de Compra{% endblock %}
+
+{% block purchases_actions %}
+    {% if current_user.has_permission('purchases', 2) %}
+        <a href="{{ url_for('purchases.purchase_create') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nueva Orden
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block purchases_content %}
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-filter"></i> Filtros de Búsqueda
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('purchases.purchase_list') }}" id="filterForm">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="id_purchase_order" class="form-label">ID Orden</label>
+                    <input type="text" class="form-control" id="id_purchase_order" name="id_purchase_order" 
+                           value="{{ filters.get('id_purchase_order', '') }}" placeholder="Buscar por ID...">
+                </div>
+                <div class="col-md-4">
+                    <label for="id_supplier" class="form-label">ID Proveedor</label>
+                    <input type="text" class="form-control" id="id_supplier" name="id_supplier" 
+                           value="{{ filters.get('id_supplier', '') }}" placeholder="Buscar por proveedor...">
+                </div>
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Estado</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">Todos los estados</option>
+                        <option value="Pendiente" {% if filters.get('status') == 'Pendiente' %}selected{% endif %}>Pendiente</option>
+                        <option value="Aprobada" {% if filters.get('status') == 'Aprobada' %}selected{% endif %}>Aprobada</option>
+                        <option value="Enviada" {% if filters.get('status') == 'Enviada' %}selected{% endif %}>Enviada</option>
+                        <option value="Recibida" {% if filters.get('status') == 'Recibida' %}selected{% endif %}>Recibida</option>
+                        <option value="Cancelada" {% if filters.get('status') == 'Cancelada' %}selected{% endif %}>Cancelada</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Aplicar Filtros
+                    </button>
+                    <a href="{{ url_for('purchases.purchase_list') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                    <a href="{{ url_for('purchases.export_csv', **filters) }}" class="btn btn-success">
+                        <i class="fas fa-file-export"></i> Exportar CSV
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Órdenes -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-list"></i> Lista de Órdenes de Compra
+            <span class="badge bg-primary ms-2">{{ orders|length }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID Orden</th>
+                        <th>Proveedor</th>
+                        <th>Fecha Emisión</th>
+                        <th>Fecha Entrega Estimada</th>
+                        <th>Estado</th>
+                        <th>Monto Total</th>
+                        <th>Moneda</th>
+                        <th>Creado por</th>
+                        <th>Última Actualización</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>
+                            <strong>{{ order.id_purchase_order }}</strong>
+                        </td>
+                        <td>
+                            {{ supplier_dict.get(order.id_supplier, order.id_supplier) }}
+                            <br><small class="text-muted">{{ order.id_supplier }}</small>
+                        </td>
+                        <td>{{ order.issue_date.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ order.estimated_delivery_date.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if order.status == 'Pendiente' %}
+                                <span class="badge bg-warning">Pendiente</span>
+                            {% elif order.status == 'Aprobada' %}
+                                <span class="badge bg-info">Aprobada</span>
+                            {% elif order.status == 'Enviada' %}
+                                <span class="badge bg-primary">Enviada</span>
+                            {% elif order.status == 'Recibida' %}
+                                <span class="badge bg-success">Recibida</span>
+                            {% elif order.status == 'Cancelada' %}
+                                <span class="badge bg-danger">Cancelada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ "%.2f"|format(order.total_amount) }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ order.currency }}</span>
+                        </td>
+                        <td>{{ order.created_by }}</td>
+                        <td>
+                            <small class="text-muted">{{ order.updated_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ url_for('purchases.purchase_detail', order_id=order.id_purchase_order) }}" 
+                                   class="btn btn-outline-primary" title="Ver Detalles">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if current_user.has_permission('purchases', 2) %}
+                                    <a href="{{ url_for('purchases.purchase_edit', order_id=order.id_purchase_order) }}" 
+                                       class="btn btn-outline-warning" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ url_for('purchases.purchase_delete', order_id=order.id_purchase_order) }}" 
+                                          method="POST" class="d-inline">
+                                        <button type="submit" 
+                                                class="btn btn-outline-danger" 
+                                                onclick="return confirm('¿Estás seguro de eliminar esta orden de compra?')"
+                                                title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+            <h5>No se encontraron órdenes de compra</h5>
+            <p class="text-muted">No hay órdenes que coincidan con los filtros aplicados.</p>
+            {% if current_user.has_permission('purchases', 2) %}
+                <a href="{{ url_for('purchases.purchase_create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Crear Primera Orden
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

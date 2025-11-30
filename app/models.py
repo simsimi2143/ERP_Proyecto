@@ -208,4 +208,67 @@ class Customer(db.Model):
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
             'created_by': self.created_by
-        }     
+        }
+    
+# ------------------------------- seccion de Compras ------------------------------------------------
+# Agregar al final de models.py
+
+class PurchaseOrder(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    id_purchase_order = db.Column(db.String(50), unique=True, nullable=False)
+    id_supplier = db.Column(db.String(50), nullable=False)
+    issue_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    estimated_delivery_date = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.String(20), default='Pendiente')  # Pendiente, Aprobada, Enviada, Recibida, Cancelada
+    total_amount = db.Column(db.Float, default=0.0)
+    currency = db.Column(db.String(10), nullable=False)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.String(100), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id_purchase_order': self.id_purchase_order,
+            'id_supplier': self.id_supplier,
+            'issue_date': self.issue_date.strftime('%Y-%m-%d'),
+            'estimated_delivery_date': self.estimated_delivery_date.strftime('%Y-%m-%d'),
+            'status': self.status,
+            'total_amount': self.total_amount,
+            'currency': self.currency,
+            'notes': self.notes or '',
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'created_by': self.created_by
+        }
+
+class PurchaseOrderLine(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    id_purchase_order_line = db.Column(db.String(50), unique=True, nullable=False)
+    id_purchase_order = db.Column(db.String(50), nullable=False)
+    id_material = db.Column(db.String(50), nullable=False)
+    position = db.Column(db.Integer, nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_material = db.Column(db.String(20), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    currency_suppliers = db.Column(db.String(10), nullable=False)
+    resolved_quantity = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.String(100), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id_purchase_order_line': self.id_purchase_order_line,
+            'id_purchase_order': self.id_purchase_order,
+            'id_material': self.id_material,
+            'position': self.position,
+            'quantity': self.quantity,
+            'unit_material': self.unit_material,
+            'price': self.price,
+            'currency_suppliers': self.currency_suppliers,
+            'resolved_quantity': self.resolved_quantity,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'created_by': self.created_by
+        }

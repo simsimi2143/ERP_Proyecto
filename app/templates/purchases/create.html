@@ -1,0 +1,336 @@
+{% extends "purchases/base.html" %}
+
+{% block purchases_title %}Crear Nueva Orden de Compra{% endblock %}
+
+{% block purchases_content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus-circle"></i> Nueva Orden de Compra
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('purchases.purchase_create') }}" id="purchaseForm">
+                    <!-- Información General -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label for="id_purchase_order" class="form-label">ID Orden de Compra *</label>
+                            <input type="text" class="form-control" id="id_purchase_order" name="id_purchase_order" 
+                                   required maxlength="50" placeholder="Ej: OC-2024-001">
+                            <div class="form-text">Identificador único de la orden</div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="id_supplier" class="form-label">Proveedor *</label>
+                            <select class="form-select" id="id_supplier" name="id_supplier" required>
+                                <option value="">Seleccionar proveedor...</option>
+                                {% for supplier in suppliers %}
+                                    <option value="{{ supplier.id_suplier }}">
+                                        {{ supplier.name }} ({{ supplier.id_suplier }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="currency" class="form-label">Moneda *</label>
+                            <select class="form-select" id="currency" name="currency" required>
+                                <option value="">Seleccionar moneda...</option>
+                                {% for currency in currencies %}
+                                    <option value="{{ currency.symbol }}">
+                                        {{ currency.name }} ({{ currency.symbol }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="issue_date" class="form-label">Fecha Emisión *</label>
+                            <input type="date" class="form-control" id="issue_date" name="issue_date" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="estimated_delivery_date" class="form-label">Fecha Entrega Estimada *</label>
+                            <input type="date" class="form-control" id="estimated_delivery_date" name="estimated_delivery_date" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Estado *</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="Pendiente" selected>Pendiente</option>
+                                <option value="Aprobada">Aprobada</option>
+                                <option value="Enviada">Enviada</option>
+                                <option value="Recibida">Recibida</option>
+                                <option value="Cancelada">Cancelada</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="notes" class="form-label">Notas</label>
+                            <textarea class="form-control" id="notes" name="notes" 
+                                      rows="3" placeholder="Notas adicionales..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Líneas de la Orden -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-list"></i> Líneas de la Orden
+                                </h6>
+                                <button type="button" class="btn btn-sm btn-success" id="addLineBtn">
+                                    <i class="fas fa-plus"></i> Agregar Línea
+                                </button>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="linesTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th width="5%">#</th>
+                                            <th width="20%">Material *</th>
+                                            <th width="10%">Cantidad *</th>
+                                            <th width="15%">Unidad *</th>
+                                            <th width="15%">Precio Unitario *</th>
+                                            <th width="15%">Moneda *</th>
+                                            <th width="15%">Subtotal</th>
+                                            <th width="5%">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="linesBody">
+                                        <!-- Las líneas se agregarán dinámicamente aquí -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="6" class="text-end"><strong>Total:</strong></td>
+                                            <td><strong id="totalAmount">0.00</strong></td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <input type="hidden" id="line_count" name="line_count" value="0">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="fas fa-save"></i> Guardar Orden de Compra
+                            </button>
+                            <a href="{{ url_for('purchases.purchase_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// =====================
+// DEPURACIÓN INICIAL
+// =====================
+console.log('Script cargado correctamente');
+
+// Sistema de gestión de líneas de orden de compra
+class PurchaseOrderLines {
+    constructor() {
+        this.lineCounter = 0;
+        this.linesBody = document.getElementById('linesBody');
+        this.lineCountInput = document.getElementById('line_count');
+        this.totalAmountElement = document.getElementById('totalAmount');
+        this.submitBtn = document.getElementById('submitBtn');
+        
+        this.init();
+    }
+    
+    init() {
+        console.log('Inicializando PurchaseOrderLines...');
+        this.setDefaultDates();
+        
+        const addBtn = document.getElementById('addLineBtn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => this.addLine());
+            console.log('Event listener agregado al botón');
+        } else {
+            console.error('ERROR: Botón addLineBtn no encontrado');
+        }
+        
+        this.addLine(); // Agregar primera línea
+    }
+    
+    setDefaultDates() {
+        const today = new Date().toISOString().split('T')[0];
+        const inOneWeek = new Date();
+        inOneWeek.setDate(inOneWeek.getDate() + 7);
+        const oneWeekLater = inOneWeek.toISOString().split('T')[0];
+        
+        document.getElementById('issue_date').value = today;
+        document.getElementById('estimated_delivery_date').value = oneWeekLater;
+    }
+    
+    addLine() {
+        this.lineCounter++;
+        const lineNumber = this.lineCounter;
+        
+        const row = document.createElement('tr');
+        row.id = `line_${lineNumber}`;
+        row.innerHTML = this.getLineHTML(lineNumber);
+        
+        this.linesBody.appendChild(row);
+        this.lineCountInput.value = this.lineCounter;
+        
+        this.attachEventListeners(row, lineNumber);
+        this.updateTotal();
+        console.log(`Línea ${lineNumber} agregada`);
+    }
+    
+    getLineHTML(lineNumber) {
+        return `
+            <td>${lineNumber}</td>
+            <td>
+                <select class="form-select material-select" name="id_material_${lineNumber}" required>
+                    <option value="">Seleccionar material...</option>
+                    {% for material in materials %}
+                        <option value="{{ material.id_material }}" data-unit="{{ material.unit }}">
+                            {{ material.id_material }} - {{ material.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <input type="number" class="form-control quantity" name="quantity_${lineNumber}" 
+                       min="1" value="1" required>
+            </td>
+            <td>
+                <input type="text" class="form-control unit" name="unit_material_${lineNumber}" 
+                       readonly required>
+            </td>
+            <td>
+                <input type="number" class="form-control price" name="price_${lineNumber}" 
+                       step="0.01" min="0" value="0" required>
+            </td>
+            <td>
+                <select class="form-select currency" name="currency_suppliers_${lineNumber}" required>
+                    <option value="">Seleccionar...</option>
+                    {% for currency in currencies %}
+                        <option value="{{ currency.symbol }}">
+                            {{ currency.symbol }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <span class="subtotal">0.00</span>
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger remove-line" 
+                        data-line="${lineNumber}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+    }
+    
+    attachEventListeners(row, lineNumber) {
+        const materialSelect = row.querySelector('.material-select');
+        const quantityInput = row.querySelector('.quantity');
+        const priceInput = row.querySelector('.price');
+        const removeBtn = row.querySelector('.remove-line');
+        
+        materialSelect.addEventListener('change', (e) => this.updateUnit(e));
+        quantityInput.addEventListener('input', () => this.calculateSubtotal(row));
+        priceInput.addEventListener('input', () => this.calculateSubtotal(row));
+        removeBtn.addEventListener('click', () => this.removeLine(lineNumber));
+    }
+    
+    removeLine(lineNumber) {
+        const row = document.getElementById(`line_${lineNumber}`);
+        if (row) {
+            row.remove();
+            this.updateLineNumbers();
+            this.updateTotal();
+            console.log(`Línea ${lineNumber} eliminada`);
+        }
+    }
+    
+    updateLineNumbers() {
+        const rows = this.linesBody.querySelectorAll('tr');
+        this.lineCounter = 0;
+        
+        rows.forEach((row, index) => {
+            this.lineCounter++;
+            const lineNumber = this.lineCounter;
+            row.id = `line_${lineNumber}`;
+            
+            row.cells[0].textContent = lineNumber;
+            
+            const inputs = row.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                const name = input.name.split('_').slice(0, -1).join('_');
+                input.name = `${name}_${lineNumber}`;
+            });
+            
+            const removeBtn = row.querySelector('.remove-line');
+            removeBtn.setAttribute('data-line', lineNumber);
+            removeBtn.onclick = () => this.removeLine(lineNumber);
+        });
+        
+        this.lineCountInput.value = this.lineCounter;
+    }
+    
+    updateUnit(event) {
+        const selectedOption = event.target.options[event.target.selectedIndex];
+        const unit = selectedOption.getAttribute('data-unit');
+        const row = event.target.closest('tr');
+        const unitInput = row.querySelector('.unit');
+        
+        unitInput.value = unit || '';
+        this.calculateSubtotal(row);
+    }
+    
+    calculateSubtotal(row) {
+        const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+        const price = parseFloat(row.querySelector('.price').value) || 0;
+        const subtotal = quantity * price;
+        
+        row.querySelector('.subtotal').textContent = subtotal.toFixed(2);
+        this.updateTotal();
+    }
+    
+    updateTotal() {
+        let total = 0;
+        const subtotals = this.linesBody.querySelectorAll('.subtotal');
+        
+        subtotals.forEach(subtotal => {
+            total += parseFloat(subtotal.textContent) || 0;
+        });
+        
+        this.totalAmountElement.textContent = total.toFixed(2);
+        this.submitBtn.disabled = this.lineCounter === 0;
+    }
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM cargado - Inicializando...');
+    console.log('addLineBtn:', document.getElementById('addLineBtn'));
+    console.log('linesBody:', document.getElementById('linesBody'));
+    
+    try {
+        new PurchaseOrderLines();
+        console.log('PurchaseOrderLines inicializado correctamente');
+    } catch (error) {
+        console.error('ERROR al inicializar:', error);
+    }
+});
+</script>
+{% endblock %}

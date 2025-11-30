@@ -96,6 +96,7 @@ def init_materials_module():
             {'name': 'Herramienta', 'description': 'Herramientas y equipos de trabajo'},
             {'name': 'Repuesto', 'description': 'Repuestos y componentes de mantenimiento'},
             {'name': 'Activo Fijo', 'description': 'Bienes de capital y activos fijos'},
+            {'name': 'Activo dinamico', 'description': 'Bienes volatiles y de consumo rápido'},
         ]
         
         types_created = 0
