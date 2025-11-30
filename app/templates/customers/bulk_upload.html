@@ -46,7 +46,7 @@
                     </ul>
                 </div>
 
-                <form method="POST" action="{{ url_for('customers.process_bulk_upload') }}" enctype="multipart/form-data" id="uploadForm">
+                <form method="POST" action="{{ url_for('purchases.process_bulk_upload') }}" enctype="multipart/form-data" id="uploadForm">
                     <div class="mb-3">
                         <label for="csv_file" class="form-label">Seleccionar archivo CSV</label>
                         <input class="form-control" type="file" id="csv_file" name="csv_file" 

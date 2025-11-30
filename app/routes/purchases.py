@@ -25,19 +25,20 @@ def purchase_list():
     if id_purchase_order_filter:
         query = query.filter(PurchaseOrder.id_purchase_order.contains(id_purchase_order_filter))
     if id_supplier_filter:
-        query = query.filter(PurchaseOrder.id_supplier.contains(id_supplier_filter))
+        query = query.filter(PurchaseOrder.id_supplier == id_supplier_filter)  # Cambiado a igualdad exacta
     if status_filter:
         query = query.filter(PurchaseOrder.status == status_filter)
     
     orders = query.order_by(PurchaseOrder.created_at.desc()).all()
     
-    # Obtener información de proveedores para mostrar
-    suppliers = Supplier.query.all()
+    # Obtener información de proveedores para mostrar y para el filtro
+    suppliers = Supplier.query.filter_by(status=True).all()
     supplier_dict = {s.id_suplier: s.name for s in suppliers}
     
     return render_template('purchases/list.html', 
                          orders=orders, 
                          supplier_dict=supplier_dict,
+                         suppliers=suppliers,  # Agregar esta línea
                          filters=request.args)
 
 @bp.route('/purchases/create', methods=['GET', 'POST'])
@@ -284,3 +285,141 @@ def get_material_info(material_id):
             'description': material.description
         })
     return jsonify({'error': 'Material no encontrado'}), 404
+
+@bp.route('/purchases/bulk_upload')
+@login_required
+@permission_required('purchases', 2)
+def bulk_upload():
+    """Mostrar página de carga masiva"""
+    return render_template('purchases/bulk_upload.html')
+
+@bp.route('/purchases/download_template')
+@login_required
+@permission_required('purchases', 2)
+def download_template():
+    """Descargar plantilla CSV para carga masiva"""
+    # Crear CSV en memoria
+    output = io.StringIO()
+    writer = csv.writer(output, 
+                       delimiter=',',
+                       quotechar='"', 
+                       quoting=csv.QUOTE_ALL,
+                       lineterminator='\n')
+    
+    # Encabezados de la plantilla
+    headers = [
+        'ID_Orden_Compra',
+        'ID_Proveedor',
+        'Fecha_Emision',
+        'Fecha_Estimada_Entrega',
+        'Estado',
+        'Moneda',
+        'Notas'
+    ]
+    writer.writerow(headers)
+    
+    # Ejemplo de datos
+    writer.writerow([
+        'OC-2024-001',
+        'PROV-001',
+        '2024-01-15',
+        '2024-02-01',
+        'Pendiente',
+        'MXN',
+        'Notas de ejemplo'
+    ])
+    
+    output.seek(0)
+    
+    return send_file(
+        io.BytesIO(output.getvalue().encode('utf-8-sig')),
+        mimetype='text/csv; charset=utf-8-sig',
+        as_attachment=True,
+        download_name='plantilla_ordenes_compra.csv'
+    )
+
+@bp.route('/purchases/process_bulk_upload', methods=['POST'])
+@login_required
+@permission_required('purchases', 2)
+def process_bulk_upload():
+    """Procesar archivo CSV de carga masiva"""
+    try:
+        if 'csv_file' not in request.files:
+            flash('No se seleccionó ningún archivo', 'error')
+            return redirect(url_for('purchases.bulk_upload'))
+        
+        file = request.files['csv_file']
+        if file.filename == '':
+            flash('No se seleccionó ningún archivo', 'error')
+            return redirect(url_for('purchases.bulk_upload'))
+        
+        if file and file.filename.endswith('.csv'):
+            # Leer el archivo CSV
+            stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+            csv_reader = csv.DictReader(stream, delimiter=',')
+            
+            orders_created = 0
+            errors = []
+            
+            for row_num, row in enumerate(csv_reader, 2):  # row_num empieza en 2 (fila 1 es encabezado)
+                try:
+                    # Validar campos obligatorios
+                    required_fields = ['ID_Orden_Compra', 'ID_Proveedor', 'Fecha_Emision', 
+                                     'Fecha_Estimada_Entrega', 'Estado', 'Moneda']
+                    for field in required_fields:
+                        if not row.get(field):
+                            errors.append(f"Fila {row_num}: Campo '{field}' es obligatorio")
+                            continue
+                    
+                    # Verificar si la orden ya existe
+                    existing_order = PurchaseOrder.query.filter_by(
+                        id_purchase_order=row['ID_Orden_Compra']
+                    ).first()
+                    
+                    if existing_order:
+                        errors.append(f"Fila {row_num}: La orden {row['ID_Orden_Compra']} ya existe")
+                        continue
+                    
+                    # Verificar que el proveedor exista
+                    supplier = Supplier.query.filter_by(id_suplier=row['ID_Proveedor']).first()
+                    if not supplier:
+                        errors.append(f"Fila {row_num}: El proveedor {row['ID_Proveedor']} no existe")
+                        continue
+                    
+                    # Crear la orden
+                    order = PurchaseOrder(
+                        id_purchase_order=row['ID_Orden_Compra'],
+                        id_supplier=row['ID_Proveedor'],
+                        issue_date=datetime.strptime(row['Fecha_Emision'], '%Y-%m-%d'),
+                        estimated_delivery_date=datetime.strptime(row['Fecha_Estimada_Entrega'], '%Y-%m-%d'),
+                        status=row['Estado'],
+                        currency=row['Moneda'],
+                        notes=row.get('Notas', ''),
+                        total_amount=0.0,  # Se puede calcular si hay líneas en el CSV
+                        created_by=current_user.username
+                    )
+                    
+                    db.session.add(order)
+                    orders_created += 1
+                    
+                except Exception as e:
+                    errors.append(f"Fila {row_num}: Error - {str(e)}")
+                    continue
+            
+            if errors:
+                db.session.rollback()
+                flash(f'Se crearon {orders_created} órdenes. Errores: {" | ".join(errors[:5])}', 'error')  # Mostrar solo primeros 5 errores
+            else:
+                db.session.commit()
+                flash(f'Carga masiva completada: {orders_created} órdenes creadas exitosamente', 'success')
+            
+            return redirect(url_for('purchases.purchase_list'))
+        
+        else:
+            flash('Formato de archivo no válido. Solo se permiten archivos CSV.', 'error')
+            return redirect(url_for('purchases.bulk_upload'))
+            
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al procesar el archivo: {str(e)}', 'error')
+        return redirect(url_for('purchases.bulk_upload'))
