@@ -1,0 +1,74 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_title %}Crear Naturaleza de Cuenta{% endblock %}
+
+{% block accounting_content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus-circle"></i> Nueva Naturaleza de Cuenta
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('accounting.account_nature_create') }}">
+                    <div class="mb-3">
+                        <label for="id_account_nature" class="form-label">ID Naturaleza *</label>
+                        <input type="text" class="form-control" id="id_account_nature" name="id_account_nature" 
+                               required maxlength="50" placeholder="Ej: DEUDORA">
+                        <div class="form-text">Identificador único de la naturaleza de cuenta</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               required maxlength="100" placeholder="Ej: Deudora">
+                    </div>
+                    <div class="mb-3">
+                        <label for="symbol" class="form-label">Símbolo</label>
+                        <input type="text" class="form-control" id="symbol" name="symbol" 
+                               maxlength="10" placeholder="Ej: D">
+                        <div class="form-text">Símbolo corto para representar la naturaleza (ej: D para Deudora)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="effect_on_balance" class="form-label">Efecto en Balance</label>
+                        <select class="form-select" id="effect_on_balance" name="effect_on_balance">
+                            <option value="">Seleccionar efecto...</option>
+                            <option value="Increase">Incrementa el saldo</option>
+                            <option value="Decrease">Disminuye el saldo</option>
+                        </select>
+                        <div class="form-text">Cómo afecta esta naturaleza al saldo de la cuenta</div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Naturaleza
+                            </button>
+                            <a href="{{ url_for('accounting.account_nature_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Información
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>La naturaleza de una cuenta determina cómo se comporta en los asientos contables:</p>
+                <ul>
+                    <li><strong>Deudora:</strong> Aumenta con débitos y disminuye con créditos</li>
+                    <li><strong>Acreedora:</strong> Aumenta con créditos y disminuye con débitos</li>
+                </ul>
+                <p>El efecto en el balance indica si aumenta o disminuye el saldo total del balance general.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_title %}Editar Grupo de Cuenta: {{ account_group.name }}{% endblock %}
+
+{% block accounting_content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit"></i> Editar Grupo de Cuenta
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('accounting.account_group_edit', group_id=account_group.id_account_group) }}">
+                    <div class="mb-3">
+                        <label for="id_account_group" class="form-label">ID Grupo</label>
+                        <input type="text" class="form-control" id="id_account_group" 
+                               value="{{ account_group.id_account_group }}" readonly>
+                        <div class="form-text">El ID del grupo de cuenta no se puede modificar</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               required maxlength="100" value="{{ account_group.name }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="code_prefix" class="form-label">Prefijo Código</label>
+                        <input type="text" class="form-control" id="code_prefix" name="code_prefix" 
+                               maxlength="20" value="{{ account_group.code_prefix or '' }}">
+                        <div class="form-text">Prefijo para los códigos de cuenta de este grupo</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ account_group.description or '' }}</textarea>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Actualizar Grupo
+                            </button>
+                            <a href="{{ url_for('accounting.account_group_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Información
+                </h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Fecha de creación:</strong> {{ account_group.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                <p><strong>Última actualización:</strong> {{ account_group.updated_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                <p><strong>Creado por:</strong> {{ account_group.created_by }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

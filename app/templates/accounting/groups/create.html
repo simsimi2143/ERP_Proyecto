@@ -1,0 +1,72 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_title %}Crear Grupo de Cuenta{% endblock %}
+
+{% block accounting_content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus-circle"></i> Nuevo Grupo de Cuenta
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('accounting.account_group_create') }}">
+                    <div class="mb-3">
+                        <label for="id_account_group" class="form-label">ID Grupo *</label>
+                        <input type="text" class="form-control" id="id_account_group" name="id_account_group" 
+                               required maxlength="50" placeholder="Ej: GRP-ACTIVO">
+                        <div class="form-text">Identificador único del grupo de cuenta</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               required maxlength="100" placeholder="Ej: Grupo Activo">
+                    </div>
+                    <div class="mb-3">
+                        <label for="code_prefix" class="form-label">Prefijo Código</label>
+                        <input type="text" class="form-control" id="code_prefix" name="code_prefix" 
+                               maxlength="20" placeholder="Ej: 1">
+                        <div class="form-text">Prefijo para los códigos de cuenta de este grupo (ej: 1 para activos)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Grupo
+                            </button>
+                            <a href="{{ url_for('accounting.account_group_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Información
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Los grupos de cuenta agrupan cuentas contables por su naturaleza:</p>
+                <ul>
+                    <li><strong>Activo:</strong> Prefijo común 1xxx</li>
+                    <li><strong>Pasivo:</strong> Prefijo común 2xxx</li>
+                    <li><strong>Capital:</strong> Prefijo común 3xxx</li>
+                    <li><strong>Ingresos:</strong> Prefijo común 4xxx</li>
+                    <li><strong>Gastos:</strong> Prefijo común 5xxx</li>
+                </ul>
+                <p>El prefijo de código ayuda a organizar el plan de cuentas de manera jerárquica.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

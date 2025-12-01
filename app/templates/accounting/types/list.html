@@ -1,0 +1,77 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_title %}Tipos de Cuenta Contable{% endblock %}
+
+{% block accounting_actions %}
+    {% if current_user.has_permission('accounting', 2) %}
+        <a href="{{ url_for('accounting.account_type_create') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nuevo Tipo
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block accounting_content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-list"></i> Tipos de Cuenta
+            <span class="badge bg-primary ms-2">{{ types|length }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if types %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for type in types %}
+                    <tr>
+                        <td>{{ type.id_account_type }}</td>
+                        <td>{{ type.name }}</td>
+                        <td>{{ type.description or '-' }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if current_user.has_permission('accounting', 2) %}
+                                    <a href="{{ url_for('accounting.account_type_edit', type_id=type.id_account_type) }}" 
+                                       class="btn btn-outline-warning" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ url_for('accounting.account_type_delete', type_id=type.id_account_type) }}" 
+                                          method="POST" class="d-inline">
+                                        <button type="submit" 
+                                                class="btn btn-outline-danger" 
+                                                onclick="return confirm('¿Estás seguro de eliminar este tipo de cuenta?')"
+                                                title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+            <h5>No se encontraron tipos de cuenta</h5>
+            <p class="text-muted">No hay tipos de cuenta registrados.</p>
+            {% if current_user.has_permission('accounting', 2) %}
+                <a href="{{ url_for('accounting.account_type_create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Crear Primer Tipo
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

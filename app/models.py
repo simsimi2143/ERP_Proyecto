@@ -362,4 +362,105 @@ class InventoryStock(db.Model):
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
             'created_by': self.created_by
-        }        
+        }   
+
+# --------------------------- Modulo de contabilidad ------------------------
+class AccountType(db.Model):
+    __tablename__ = 'account_type'
+    id = db.Column(db.Integer, primary_key=True)
+    id_account_type = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.String(100), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id_account_type': self.id_account_type,
+            'name': self.name,
+            'description': self.description or '',
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'created_by': self.created_by
+        }
+
+class AccountGroup(db.Model):
+    __tablename__ = 'account_group'
+    id = db.Column(db.Integer, primary_key=True)
+    id_account_group = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    code_prefix = db.Column(db.String(20))
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.String(100), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id_account_group': self.id_account_group,
+            'name': self.name,
+            'code_prefix': self.code_prefix or '',
+            'description': self.description or '',
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'created_by': self.created_by
+        }
+
+class AccountNature(db.Model):
+    __tablename__ = 'account_nature'
+    id = db.Column(db.Integer, primary_key=True)
+    id_account_nature = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    symbol = db.Column(db.String(10))
+    effect_on_balance = db.Column(db.String(20))  # 'Increase', 'Decrease'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.String(100), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id_account_nature': self.id_account_nature,
+            'name': self.name,
+            'symbol': self.symbol or '',
+            'effect_on_balance': self.effect_on_balance,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'created_by': self.created_by
+        }
+
+class AccountAccount(db.Model):
+    __tablename__ = 'account_account'
+    id = db.Column(db.Integer, primary_key=True)
+    id_account = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(200), nullable=False)
+    code = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.Text)
+    account_type = db.Column(db.String(50), nullable=False)  # Referencia a id_account_type
+    account_group = db.Column(db.String(50), nullable=False)  # Referencia a id_account_group
+    nature = db.Column(db.String(50), nullable=False)  # Referencia a id_account_nature
+    currency_id = db.Column(db.String(10), nullable=False)  # Referencia a currencies.symbol
+    country_id = db.Column(db.String(10), nullable=False)  # Referencia a countries.symbol
+    parent_account = db.Column(db.String(50))  # Referencia a id_account (jerarquía)
+    status = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.String(100), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id_account': self.id_account,
+            'name': self.name,
+            'code': self.code,
+            'description': self.description or '',
+            'account_type': self.account_type,
+            'account_group': self.account_group,
+            'nature': self.nature,
+            'currency_id': self.currency_id,
+            'country_id': self.country_id,
+            'parent_account': self.parent_account or '',
+            'status': 'Activo' if self.status else 'Inactivo',
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'created_by': self.created_by
+        }             

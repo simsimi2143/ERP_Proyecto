@@ -19,6 +19,8 @@ def create_app():
     from app.routes.customers import bp as customers_bp  # clientes
     from app.routes.purchases import bp as purchases_bp # compras
     from app.routes.inventory import bp as inventory_bp # inventario
+    from app.routes.accounting import bp as accounting_bp # contabiliadad
+    app.register_blueprint(accounting_bp) # contabiliadad
     app.register_blueprint(inventory_bp) # inventario
     app.register_blueprint(purchases_bp) # compras
     app.register_blueprint(users_bp)    

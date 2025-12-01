@@ -1,0 +1,24 @@
+<!-- templates/accounting/_navigation.html -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="card-title mb-0">
+            <i class="fas fa-bars"></i> Navegación de Contabilidad
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('accounting.account_list') }}" class="btn btn-outline-primary">
+                <i class="fas fa-list"></i> Cuentas
+            </a>
+            <a href="{{ url_for('accounting.account_type_list') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-tags"></i> Tipos
+            </a>
+            <a href="{{ url_for('accounting.account_group_list') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-layer-group"></i> Grupos
+            </a>
+            <a href="{{ url_for('accounting.account_nature_list') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-balance-scale"></i> Naturalezas
+            </a>
+        </div>
+    </div>
+</div>
