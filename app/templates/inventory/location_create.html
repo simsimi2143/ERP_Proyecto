@@ -1,0 +1,69 @@
+{% extends "inventory/base.html" %}
+
+{% block inventory_title %}Crear Nueva Ubicación{% endblock %}
+
+{% block inventory_content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus-circle"></i> Nueva Ubicación
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('inventory.location_create') }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   required maxlength="200" placeholder="Ej: Bodega Central">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="code" class="form-label">Código *</label>
+                            <input type="text" class="form-control" id="code" name="code" 
+                                   required maxlength="50" placeholder="Ej: BOD-CENTRAL">
+                        </div>
+                        <div class="col-12">
+                            <label for="location" class="form-label">Ubicación Física</label>
+                            <textarea class="form-control" id="location" name="location" 
+                                      rows="2" placeholder="Dirección física de la ubicación..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="main_location" name="main_location">
+                                <label class="form-check-label" for="main_location">
+                                    Marcar como ubicación principal
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Ubicación
+                            </button>
+                            <a href="{{ url_for('inventory.location_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Información
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Las ubicaciones representan los lugares físicos donde se almacenan los materiales.</p>
+                <p><strong>Ubicación principal:</strong> Solo una ubicación debe ser marcada como principal. Esta se utilizará por defecto en algunos procesos.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

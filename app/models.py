@@ -272,3 +272,94 @@ class PurchaseOrderLine(db.Model):
             'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
             'created_by': self.created_by
         }
+        
+# ----------------------- modulo de inventario ----------------------------------------------
+
+class Location(db.Model):
+    __tablename__ = 'locations_inventory'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    main_location = db.Column(db.Boolean, default=False)
+    location = db.Column(db.String(500))  # Dirección física
+    status = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.String(100), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'code': self.code,
+            'main_location': self.main_location,
+            'location': self.location,
+            'status': 'Activo' if self.status else 'Inactivo',
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'created_by': self.created_by
+        }
+
+class InventoryMovement(db.Model):
+    __tablename__ = 'inventory_movements'
+    id = db.Column(db.Integer, primary_key=True)
+    id_location = db.Column(db.Integer, db.ForeignKey('locations_inventory.id'), nullable=False)
+    id_material = db.Column(db.String(50), db.ForeignKey('material.id_material'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_type = db.Column(db.String(20), nullable=False)
+    movement_type = db.Column(db.String(20), nullable=False)  # ENTRADA, SALIDA, AJUSTE
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.String(100), nullable=False)
+
+    # Relaciones
+    location = db.relationship('Location', backref='inventory_movements')
+    material = db.relationship('Material', backref='inventory_movements')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'id_location': self.id_location,
+            'id_material': self.id_material,
+            'quantity': self.quantity,
+            'unit_type': self.unit_type,
+            'movement_type': self.movement_type,
+            'notes': self.notes or '',
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'created_by': self.created_by
+        }
+
+class InventoryStock(db.Model):
+    __tablename__ = 'inventory_stock'
+    id = db.Column(db.Integer, primary_key=True)
+    id_location = db.Column(db.Integer, db.ForeignKey('locations_inventory.id'), nullable=False)
+    id_material = db.Column(db.String(50), db.ForeignKey('material.id_material'), nullable=False)
+    quantity = db.Column(db.Integer, default=0)
+    unit_type = db.Column(db.String(20), nullable=False)
+    min_stock = db.Column(db.Integer, default=0)
+    max_stock = db.Column(db.Integer, default=0)
+    last_movement = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.String(100), nullable=False)
+
+    # Relaciones
+    location = db.relationship('Location', backref='inventory_stocks')
+    material = db.relationship('Material', backref='inventory_stocks')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'id_location': self.id_location,
+            'id_material': self.id_material,
+            'quantity': self.quantity,
+            'unit_type': self.unit_type,
+            'min_stock': self.min_stock,
+            'max_stock': self.max_stock,
+            'last_movement': self.last_movement.strftime('%Y-%m-%d %H:%M:%S') if self.last_movement else '',
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'created_by': self.created_by
+        }        

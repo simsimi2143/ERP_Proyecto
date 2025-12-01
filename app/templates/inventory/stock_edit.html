@@ -1,0 +1,75 @@
+{% extends "inventory/base.html" %}
+
+{% block inventory_title %}Editar Límites de Stock: {{ stock.material.name }}{% endblock %}
+
+{% block inventory_content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit"></i> Editar Límites de Stock
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('inventory.stock_edit', stock_id=stock.id) }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Ubicación</label>
+                            <input type="text" class="form-control" value="{{ stock.location.name }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Material</label>
+                            <input type="text" class="form-control" value="{{ stock.material.name }}" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Stock Actual</label>
+                            <input type="text" class="form-control" value="{{ stock.quantity }} {{ stock.unit_type }}" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="min_stock" class="form-label">Stock Mínimo *</label>
+                            <input type="number" class="form-control" id="min_stock" name="min_stock" 
+                                   value="{{ stock.min_stock }}" min="0" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="max_stock" class="form-label">Stock Máximo *</label>
+                            <input type="number" class="form-control" id="max_stock" name="max_stock" 
+                                   value="{{ stock.max_stock }}" min="0" required>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Actualizar Límites
+                            </button>
+                            <a href="{{ url_for('inventory.inventory_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Información
+                </h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Stock Mínimo:</strong> Cuando el stock está por debajo de este nivel, se generará una alerta.</p>
+                <p><strong>Stock Máximo:</strong> Nivel máximo de stock recomendado. Ayuda a evitar sobrestock.</p>
+                <p><strong>Último movimiento:</strong> 
+                    {% if stock.last_movement %}
+                        {{ stock.last_movement.strftime('%d/%m/%Y %H:%M') }}
+                    {% else %}
+                        Sin movimientos
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

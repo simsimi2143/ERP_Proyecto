@@ -1,0 +1,89 @@
+{% extends "inventory/base.html" %}
+
+{% block inventory_title %}Ubicaciones de Inventario{% endblock %}
+
+{% block inventory_actions %}
+    {% if current_user.has_permission('inventory', 2) %}
+        <a href="{{ url_for('inventory.location_create') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nueva Ubicación
+        </a>
+    {% endif %}
+    <a href="{{ url_for('inventory.inventory_list') }}" class="btn btn-primary">
+        <i class="fas fa-boxes"></i> Ver Stock
+    </a>
+{% endblock %}
+
+{% block inventory_content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-map-marker-alt"></i> Lista de Ubicaciones
+            <span class="badge bg-primary ms-2">{{ locations|length }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if locations %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Código</th>
+                        <th>Ubicación Física</th>
+                        <th>Principal</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for location in locations %}
+                    <tr>
+                        <td>
+                            <strong>{{ location.name }}</strong>
+                        </td>
+                        <td>{{ location.code }}</td>
+                        <td>{{ location.location or '-' }}</td>
+                        <td>
+                            {% if location.main_location %}
+                                <span class="badge bg-success">Sí</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if location.status %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if current_user.has_permission('inventory', 2) %}
+                                    <a href="{{ url_for('inventory.location_edit', location_id=location.id) }}" 
+                                       class="btn btn-outline-warning" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+            <h5>No se encontraron ubicaciones</h5>
+            <p class="text-muted">No hay ubicaciones registradas en el sistema.</p>
+            {% if current_user.has_permission('inventory', 2) %}
+                <a href="{{ url_for('inventory.location_create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Crear Primera Ubicación
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

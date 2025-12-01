@@ -13,7 +13,7 @@ mindmap
     PRODUCTOS
     USUARIOS 
     "Y MÁS"
-    FINANZAS
+    CONTABILIDAD
 ```
 
 

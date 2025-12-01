@@ -1,0 +1,80 @@
+{% extends "inventory/base.html" %}
+
+{% block inventory_title %}Editar Ubicación: {{ location.name }}{% endblock %}
+
+{% block inventory_content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit"></i> Editar Ubicación
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('inventory.location_edit', location_id=location.id) }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ location.name }}" required maxlength="200">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="code" class="form-label">Código *</label>
+                            <input type="text" class="form-control" id="code" name="code" 
+                                   value="{{ location.code }}" required maxlength="50">
+                        </div>
+                        <div class="col-12">
+                            <label for="location" class="form-label">Ubicación Física</label>
+                            <textarea class="form-control" id="location" name="location" 
+                                      rows="2">{{ location.location or '' }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="main_location" name="main_location"
+                                       {% if location.main_location %}checked{% endif %}>
+                                <label class="form-check-label" for="main_location">
+                                    Marcar como ubicación principal
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="status" name="status"
+                                       {% if location.status %}checked{% endif %}>
+                                <label class="form-check-label" for="status">
+                                    Activo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Actualizar Ubicación
+                            </button>
+                            <a href="{{ url_for('inventory.location_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Información
+                </h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Fecha de creación:</strong> {{ location.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                <p><strong>Última actualización:</strong> {{ location.updated_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                <p><strong>Creado por:</strong> {{ location.created_by }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

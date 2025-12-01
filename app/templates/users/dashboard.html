@@ -142,7 +142,10 @@
                         {% endif %}
                     </small>
                 </div>
-                <a href="#" class="btn btn-primary w-100">Acceder al Módulo</a>
+                <div class="btn-group w-100" role="group">
+                    <a href="{{ url_for('inventory.inventory_list') }}" class="btn btn-primary w-100">Acceder al Módulo inventario</a>
+                    <a href="{{ url_for('inventory.location_list') }}" class="btn btn-primary w-100">Acceder a las ubicaciones</a>
+                </div>
             </div>
         </div>
     </div>

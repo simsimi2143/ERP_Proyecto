@@ -1,0 +1,136 @@
+{% extends "inventory/base.html" %}
+
+{% block inventory_title %}Registrar Movimiento de Inventario{% endblock %}
+
+{% block inventory_content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus-circle"></i> Nuevo Movimiento de Inventario
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('inventory.movement_create') }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="id_location" class="form-label">Ubicación *</label>
+                            <select class="form-select" id="id_location" name="id_location" required>
+                                <option value="">Seleccionar ubicación...</option>
+                                {% for location in locations %}
+                                    <option value="{{ location.id }}">{{ location.name }} ({{ location.code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_material" class="form-label">Material *</label>
+                            <select class="form-select" id="id_material" name="id_material" required>
+                                <option value="">Seleccionar material...</option>
+                                {% for material in materials %}
+                                    <option value="{{ material.id_material }}" data-unit="{{ material.unit }}">
+                                        {{ material.id_material }} - {{ material.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="movement_type" class="form-label">Tipo de Movimiento *</label>
+                            <select class="form-select" id="movement_type" name="movement_type" required>
+                                <option value="ENTRADA">Entrada</option>
+                                <option value="SALIDA">Salida</option>
+                                <option value="AJUSTE">Ajuste</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="quantity" class="form-label">Cantidad *</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" 
+                                   min="1" value="1" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="unit_type" class="form-label">Unidad *</label>
+                            <input type="text" class="form-control" id="unit_type" name="unit_type" 
+                                   readonly required>
+                        </div>
+                        <div class="col-12">
+                            <label for="notes" class="form-label">Notas</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Registrar Movimiento
+                            </button>
+                            <a href="{{ url_for('inventory.movement_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Información
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Tipos de Movimiento:</h6>
+                <ul>
+                    <li><strong>Entrada:</strong> Aumenta el stock</li>
+                    <li><strong>Salida:</strong> Disminuye el stock</li>
+                    <li><strong>Ajuste:</strong> Establece el stock a la cantidad indicada</li>
+                </ul>
+                <div id="stock-info" class="mt-3">
+                    <p class="text-muted">Selecciona una ubicación y material para ver el stock actual.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const locationSelect = document.getElementById('id_location');
+    const materialSelect = document.getElementById('id_material');
+    const unitTypeInput = document.getElementById('unit_type');
+    const stockInfoDiv = document.getElementById('stock-info');
+
+    // Actualizar unidad cuando se selecciona un material
+    materialSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const unit = selectedOption.getAttribute('data-unit');
+        unitTypeInput.value = unit || '';
+        updateStockInfo();
+    });
+
+    // Actualizar información de stock cuando cambia la ubicación o el material
+    locationSelect.addEventListener('change', updateStockInfo);
+
+    function updateStockInfo() {
+        const locationId = locationSelect.value;
+        const materialId = materialSelect.value;
+
+        if (locationId && materialId) {
+            fetch(`/api/inventory/stock?location_id=${locationId}&material_id=${materialId}`)
+                .then(response => response.json())
+                .then(data => {
+                    stockInfoDiv.innerHTML = `
+                        <h6>Stock Actual:</h6>
+                        <p><strong>Cantidad:</strong> ${data.current_stock} ${data.unit_type}</p>
+                    `;
+                })
+                .catch(error => {
+                    stockInfoDiv.innerHTML = '<p class="text-danger">Error al cargar el stock</p>';
+                });
+        } else {
+            stockInfoDiv.innerHTML = '<p class="text-muted">Selecciona una ubicación y material para ver el stock actual.</p>';
+        }
+    }
+});
+</script>
+{% endblock %}

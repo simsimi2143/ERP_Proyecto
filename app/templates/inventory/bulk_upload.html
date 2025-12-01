@@ -1,0 +1,126 @@
+{% extends "inventory/base.html" %}
+
+{% block inventory_title %}Carga Masiva de Movimientos de Inventario{% endblock %}
+
+{% block inventory_actions %}
+    <a href="{{ url_for('inventory.movement_list') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver a Movimientos
+    </a>
+{% endblock %}
+
+{% block inventory_content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-upload"></i> Carga Masiva de Movimientos
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Instrucciones:</h6>
+                    <ol class="mb-0">
+                        <li>Descarga la plantilla CSV haciendo clic en el botón "Descargar Plantilla"</li>
+                        <li>Llena la plantilla con los datos de los movimientos de inventario</li>
+                        <li>Sube el archivo CSV completado usando el formulario below</li>
+                        <li>Revisa que los datos sean correctos antes de confirmar</li>
+                    </ol>
+                </div>
+
+                <div class="text-center mb-4">
+                    <a href="{{ url_for('inventory.download_movement_template') }}" class="btn btn-success btn-lg">
+                        <i class="fas fa-download"></i> Descargar Plantilla CSV
+                    </a>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-exclamation-triangle"></i> Formato Requerido:</h6>
+                    <ul class="mb-0">
+                        <li><strong>ID_Ubicacion:</strong> ID de la ubicación existente (obligatorio)</li>
+                        <li><strong>ID_Material:</strong> ID del material existente (obligatorio)</li>
+                        <li><strong>Cantidad:</strong> Cantidad del movimiento (obligatorio, entero positivo)</li>
+                        <li><strong>Tipo_Movimiento:</strong> ENTRADA, SALIDA o AJUSTE (obligatorio)</li>
+                        <li><strong>Unidad:</strong> Unidad del material (obligatorio)</li>
+                        <li><strong>Notas:</strong> Notas adicionales (opcional)</li>
+                    </ul>
+                </div>
+
+                <form method="POST" action="{{ url_for('inventory.process_bulk_upload') }}" enctype="multipart/form-data" id="uploadForm">
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">Seleccionar archivo CSV</label>
+                        <input class="form-control" type="file" id="csv_file" name="csv_file" 
+                               accept=".csv" required>
+                        <div class="form-text">Solo archivos CSV con el formato correcto</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary" disabled id="uploadBtn">
+                            <i class="fas fa-upload"></i> Procesar Carga Masiva
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-table"></i> Vista Previa Plantilla
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID_Ubicacion</th>
+                                <th>ID_Material</th>
+                                <th>Cantidad</th>
+                                <th>Tipo_Movimiento</th>
+                                <th>Unidad</th>
+                                <th>Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>MAT-001</td>
+                                <td>100</td>
+                                <td>ENTRADA</td>
+                                <td>pzas</td>
+                                <td>Carga inicial</td>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>MAT-002</td>
+                                <td>50</td>
+                                <td>SALIDA</td>
+                                <td>kg</td>
+                                <td>Salida para producción</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('csv_file');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            uploadBtn.disabled = false;
+        } else {
+            uploadBtn.disabled = true;
+        }
+    });
+});
+</script>
+{% endblock %}
