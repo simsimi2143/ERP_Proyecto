@@ -7,6 +7,40 @@
         <i class="fas fa-arrow-left"></i> Volver a Lista
     </a>
     {% if current_user.has_permission('purchases', 2) %}
+        {% if order.status == 'Recibida' %}
+            <!-- Verificar si la recepción ya fue procesada (si alguna línea tiene resolved_quantity > 0) -->
+            {% set reception_processed = false %}
+            {% for line in lines %}
+                {% if line.resolved_quantity|int > 0 %}
+                    {% set reception_processed = true %}
+                {% endif %}
+            {% endfor %}
+            
+            {% if reception_processed %}
+                <!-- Botones deshabilitados porque ya se procesó recepción -->
+                <span class="badge bg-info ms-2">
+                    <i class="fas fa-check-circle"></i> Recepción Procesada
+                </span>
+                <button type="button" class="btn btn-success" disabled style="opacity: 0.6;">
+                    <i class="fas fa-check-circle"></i> Procesar Recepción
+                </button>
+                <button type="button" class="btn btn-info" disabled style="opacity: 0.6;">
+                    <i class="fas fa-clipboard-check"></i> Recepción Parcial
+                </button>
+            {% else %}
+                <!-- Botones habilitados porque aún no se ha procesado recepción -->
+                <form action="{{ url_for('purchases.purchase_receive', order_id=order.id_purchase_order) }}" 
+                      method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-success" 
+                            onclick="return confirm('¿Confirmar recepción completa de todos los materiales?')">
+                        <i class="fas fa-check-circle"></i> Procesar Recepción
+                    </button>
+                </form>
+                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#partialReceiveModal">
+                    <i class="fas fa-clipboard-check"></i> Recepción Parcial
+                </button>
+            {% endif %}
+        {% endif %}
         <a href="{{ url_for('purchases.purchase_edit', order_id=order.id_purchase_order) }}" class="btn btn-warning">
             <i class="fas fa-edit"></i> Editar
         </a>
@@ -81,6 +115,8 @@
                         <th>Última Actualización:</th>
                         <td>{{ order.updated_at.strftime('%d/%m/%Y %H:%M') }}</td>
                     </tr>
+                    
+                    </tr>
                 </table>
             </div>
         </div>
@@ -101,7 +137,8 @@
                             <tr>
                                 <th>#</th>
                                 <th>Material</th>
-                                <th>Cantidad</th>
+                                <th>Cantidad Solicitada</th>
+                                <th>Recibido en Inventario</th>
                                 <th>Precio Unit.</th>
                                 <th>Subtotal</th>
                             </tr>
@@ -118,6 +155,24 @@
                                     {% endif %}
                                 </td>
                                 <td>{{ line.quantity }} {{ line.unit_material }}</td>
+                                <td>
+                                    {% if line.resolved_quantity == 0 %}
+                                        <span class="badge bg-warning">Pendiente</span>
+                                        <br><small class="text-muted">No registrado en inventario</small>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check"></i> {{ line.resolved_quantity }} {{ line.unit_material }}
+                                        </span>
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if line.resolved_quantity == line.quantity %}
+                                                Recepción completa
+                                            {% else %}
+                                                Recepción parcial
+                                            {% endif %}
+                                        </small>
+                                    {% endif %}
+                                </td>
                                 <td>{{ "%.2f"|format(line.price) }} {{ line.currency_suppliers }}</td>
                                 <td>{{ "%.2f"|format(line.quantity * line.price) }} {{ line.currency_suppliers }}</td>
                             </tr>
@@ -125,12 +180,30 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                                <td colspan="5" class="text-end"><strong>Total:</strong></td>
                                 <td><strong>{{ "%.2f"|format(order.total_amount) }} {{ order.currency }}</strong></td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
+                
+                <!-- Advertencia si ya fue procesada -->
+                {% set reception_processed = false %}
+                {% for line in lines %}
+                    {% if line.resolved_quantity|int > 0 %}
+                        {% set reception_processed = true %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% if reception_processed %}
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Información:</strong> Esta orden ya ha sido procesada en inventario. 
+                    Los materiales han sido registrados y el stock ha sido actualizado. 
+                    No es necesario procesar nuevamente.
+                </div>
+                {% endif %}
+                
                 {% else %}
                 <div class="text-center py-3">
                     <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
@@ -181,6 +254,117 @@
                 </table>
             </div>
         </div>
+        
+        
     </div>
 </div>
+
+<!-- Modal para recepción parcial - Solo se muestra si no se ha procesado recepción -->
+{% set reception_processed = false %}
+{% for line in lines %}
+    {% if line.resolved_quantity|int > 0 %}
+        {% set reception_processed = true %}
+    {% endif %}
+{% endfor %}
+
+{% if not reception_processed %}
+<div class="modal fade" id="partialReceiveModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Recepción Parcial - Orden {{ order.id_purchase_order }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('purchases.purchase_receive_partial', order_id=order.id_purchase_order) }}">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Importante:</strong> Una vez que proceses la recepción (completa o parcial), 
+                        no podrás volver a procesarla. Asegúrate de que las cantidades sean correctas.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Ubicación de Recepción *</label>
+                        <select class="form-select" name="location_id" required>
+                            <option value="">Seleccionar ubicación...</option>
+                            {% for location in locations %}
+                                <option value="{{ location.id }}">{{ location.name }} ({{ location.code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Material</th>
+                                    <th>Cantidad Total</th>
+                                    <th>Cantidad a Recibir *</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for line in lines %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ material_dict[line.id_material].name }}</strong>
+                                        <br><small class="text-muted">{{ line.id_material }}</small>
+                                    </td>
+                                    <td>{{ line.quantity }} {{ line.unit_material }}</td>
+                                    <td>
+                                        <input type="number" 
+                                               name="received_qty_{{ line.id }}"
+                                               class="form-control form-control-sm" 
+                                               min="0" 
+                                               max="{{ line.quantity }}"
+                                               value="{{ line.quantity }}"
+                                               required>
+                                        <small class="text-muted">Máximo: {{ line.quantity }} {{ line.unit_material }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" 
+                            onclick="return confirm('¿Confirmar recepción de los materiales seleccionados? Esta acción no se puede deshacer.')">
+                        <i class="fas fa-check"></i> Procesar Recepción
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- JavaScript para manejar el estado de los botones -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar si ya se procesó recepción
+    const receptionProcessed = {{ 'true' if reception_processed else 'false' }};
+    
+    if (receptionProcessed) {
+        // Deshabilitar el formulario de recepción completa si existe
+        const completeForm = document.querySelector('form[action*="purchase_receive"]');
+        if (completeForm) {
+            const submitBtn = completeForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.6';
+                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Recepción Ya Procesada';
+            }
+        }
+        
+        // Deshabilitar el botón del modal si existe
+        const partialBtn = document.querySelector('button[data-bs-target="#partialReceiveModal"]');
+        if (partialBtn) {
+            partialBtn.disabled = true;
+            partialBtn.style.opacity = '0.6';
+            partialBtn.innerHTML = '<i class="fas fa-clipboard-check"></i> Recepción Ya Procesada';
+        }
+    }
+});
+</script>
 {% endblock %}

@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_required, current_user
 from app import db
 from app.models import PurchaseOrder, PurchaseOrderLine, Supplier, Material, Currency
+from app.models import Location, InventoryStock, InventoryMovement
 from app.utils.auth import permission_required
 import csv
 import io
@@ -113,11 +114,15 @@ def purchase_detail(order_id):
     materials = Material.query.all()
     material_dict = {m.id_material: m for m in materials}
     
+    # Obtener ubicaciones para recepción
+    locations = Location.query.filter_by(status=True).all()
+    
     return render_template('purchases/detail.html', 
                          order=order, 
                          lines=lines,
                          supplier=supplier,
-                         material_dict=material_dict)
+                         material_dict=material_dict,
+                         locations=locations)  # Agregar esta línea
 
 @bp.route('/purchases/<string:order_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -423,3 +428,206 @@ def process_bulk_upload():
         db.session.rollback()
         flash(f'Error al procesar el archivo: {str(e)}', 'error')
         return redirect(url_for('purchases.bulk_upload'))
+    
+# estado de la orden registra en inventario
+@bp.route('/purchases/<string:order_id>/receive', methods=['POST'])
+@login_required
+@permission_required('purchases', 2)
+def purchase_receive(order_id):
+    """Procesar recepción de orden de compra y registrar en inventario"""
+    order = PurchaseOrder.query.filter_by(id_purchase_order=order_id).first_or_404()
+    
+    if order.status != 'Recibida':
+        flash('La orden debe estar en estado "Recibida" para procesar la recepción', 'error')
+        return redirect(url_for('purchases.purchase_detail', order_id=order_id))
+    
+    try:
+        # Obtener ubicación principal
+        main_location = Location.query.filter_by(main_location=True).first()
+        if not main_location:
+            flash('No hay ubicación principal configurada', 'error')
+            return redirect(url_for('purchases.purchase_detail', order_id=order_id))
+        
+        lines = PurchaseOrderLine.query.filter_by(id_purchase_order=order_id).all()
+        movements_created = 0
+        
+        for line in lines:
+            # Solo procesar si no ha sido recibido completamente
+            if line.resolved_quantity < line.quantity:
+                # Calcular cantidad pendiente
+                pending_quantity = line.quantity - line.resolved_quantity
+                
+                # Crear movimiento de entrada
+                movement = InventoryMovement(
+                    id_location=main_location.id,
+                    id_material=line.id_material,
+                    quantity=pending_quantity,
+                    unit_type=line.unit_material,
+                    movement_type='ENTRADA',
+                    notes=f'Recepcion orden {order.id_purchase_order}',
+                    created_by=current_user.username
+                )
+                db.session.add(movement)
+                
+                # Actualizar stock
+                stock = InventoryStock.query.filter_by(
+                    id_location=main_location.id,
+                    id_material=line.id_material
+                ).first()
+                
+                if not stock:
+                    stock = InventoryStock(
+                        id_location=main_location.id,
+                        id_material=line.id_material,
+                        quantity=0,
+                        unit_type=line.unit_material,
+                        created_by=current_user.username
+                    )
+                    db.session.add(stock)
+                
+                stock.quantity += pending_quantity
+                stock.last_movement = datetime.utcnow()
+                
+                # Actualizar cantidad recibida en la línea
+                line.resolved_quantity += pending_quantity
+                movements_created += 1
+        
+        db.session.commit()
+        
+        if movements_created > 0:
+            flash(f'Recepción procesada: {movements_created} movimientos creados', 'success')
+        else:
+            flash('No hay cantidades pendientes por recibir', 'info')
+            
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'error')
+    
+    return redirect(url_for('purchases.purchase_detail', order_id=order_id))
+
+@bp.route('/purchases/<string:order_id>/receive_partial', methods=['POST'])
+@login_required
+@permission_required('purchases', 2)
+def purchase_receive_partial(order_id):
+    """Recepcion parcial de una orden de compra"""
+    order = PurchaseOrder.query.filter_by(id_purchase_order=order_id).first_or_404()
+    
+    try:
+        location_id = request.form.get('location_id')
+        if not location_id:
+            flash('Debe seleccionar una ubicación', 'error')
+            return redirect(url_for('purchases.purchase_detail', order_id=order_id))
+        
+        location = Location.query.get(location_id)
+        if not location:
+            flash('Ubicación no válida', 'error')
+            return redirect(url_for('purchases.purchase_detail', order_id=order_id))
+        
+        # Procesar cada línea con cantidades parciales
+        movements_created = 0
+        
+        for line in PurchaseOrderLine.query.filter_by(id_purchase_order=order_id).all():
+            received_qty = request.form.get(f'received_qty_{line.id}')
+            
+            if received_qty and float(received_qty) > 0:
+                received_qty = int(received_qty)
+                pending_quantity = line.quantity - line.resolved_quantity
+                
+                if received_qty > pending_quantity:
+                    flash(f'La cantidad recibida para {line.id_material} excede la pendiente', 'warning')
+                    continue
+                
+                # Crear movimiento de entrada
+                movement = InventoryMovement(
+                    id_location=location_id,
+                    id_material=line.id_material,
+                    quantity=received_qty,
+                    unit_type=line.unit_material,
+                    movement_type='ENTRADA',
+                    notes=f'Recepcion parcial orden {order.id_purchase_order} - Proveedor: {order.id_supplier}',
+                    created_by=current_user.username
+                )
+                db.session.add(movement)
+                
+                # Actualizar stock
+                stock = InventoryStock.query.filter_by(
+                    id_location=location_id,
+                    id_material=line.id_material
+                ).first()
+                
+                if not stock:
+                    stock = InventoryStock(
+                        id_location=location_id,
+                        id_material=line.id_material,
+                        quantity=0,
+                        unit_type=line.unit_material,
+                        created_by=current_user.username
+                    )
+                    db.session.add(stock)
+                
+                stock.quantity += received_qty
+                stock.last_movement = datetime.utcnow()
+                stock.updated_at = datetime.utcnow()
+                
+                # Actualizar cantidad recibida
+                line.resolved_quantity += received_qty
+                line.updated_at = datetime.utcnow()
+                
+                movements_created += 1
+        
+        order.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        flash(f'Recepcion parcial completada: {movements_created} movimientos registrados', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error en recepcion parcial: {str(e)}', 'error')
+    
+    return redirect(url_for('purchases.purchase_detail', order_id=order_id)) 
+
+
+@bp.route('/debug/order/<string:order_id>')
+@login_required
+def debug_order(order_id):
+    """Depurar datos de una orden"""
+    order = PurchaseOrder.query.filter_by(id_purchase_order=order_id).first_or_404()
+    lines = PurchaseOrderLine.query.filter_by(id_purchase_order=order_id).all()
+    
+    debug_info = {
+        'order': {
+            'id': order.id_purchase_order,
+            'status': order.status,
+            'supplier': order.id_supplier
+        },
+        'lines': []
+    }
+    
+    for line in lines:
+        debug_info['lines'].append({
+            'material': line.id_material,
+            'quantity': line.quantity,
+            'resolved_quantity': line.resolved_quantity,
+            'pending': line.quantity - line.resolved_quantity
+        })
+    
+    # Verificar movimientos de inventario
+    movements = []
+    for line in lines:
+        movement = InventoryMovement.query.filter_by(
+            id_material=line.id_material
+        ).filter(
+            InventoryMovement.notes.contains(order_id)
+        ).first()
+        
+        if movement:
+            movements.append({
+                'material': movement.id_material,
+                'quantity': movement.quantity,
+                'type': movement.movement_type,
+                'notes': movement.notes
+            })
+    
+    debug_info['inventory_movements'] = movements
+    
+    return jsonify(debug_info)
