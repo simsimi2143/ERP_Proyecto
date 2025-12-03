@@ -140,6 +140,7 @@ def export_csv():
         status_bool = status_filter == 'true'
         query = query.filter(Material.status == status_bool)
     
+    
     materials = query.order_by(Material.created_at.desc()).all()
     
     # Crear CSV en memoria con encoding para Excel

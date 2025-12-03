@@ -232,43 +232,60 @@ def export_stock():
     import csv
     import io
     from datetime import datetime
-    
-    stocks = InventoryStock.query.all()
-    
+
+    # 1. Obtener filtros desde la URL
+    location_filter = request.args.get('location', '')
+    material_filter = request.args.get('material', '')
+
+    # 2. Construir consulta base
+    query = InventoryStock.query
+
+    # 3. Aplicar filtros
+    if location_filter:
+        query = query.filter(InventoryStock.id_location == location_filter)
+
+    if material_filter:
+        query = query.filter(InventoryStock.id_material == material_filter)
+
+    # 4. Ejecutar consulta
+    stocks = query.order_by(InventoryStock.updated_at.desc()).all()
+
+    # 5. Generar CSV
     output = io.StringIO()
-    writer = csv.writer(output, 
-                       delimiter=',',
-                       quotechar='"', 
-                       quoting=csv.QUOTE_ALL,
-                       lineterminator='\n')
-    
+    writer = csv.writer(output,
+                        delimiter=',',
+                        quotechar='"',
+                        quoting=csv.QUOTE_ALL,
+                        lineterminator='\n')
+
     headers = [
         'Ubicación', 'Material', 'Stock Actual', 'Unidad',
         'Stock Mínimo', 'Stock Máximo', 'Último Movimiento'
     ]
     writer.writerow(headers)
-    
+
     for stock in stocks:
         writer.writerow([
-            stock.location.name,
-            f"{stock.material.id_material} - {stock.material.name}",
+            stock.location.name if stock.location else '',
+            f"{stock.material.id_material} - {stock.material.name}" if stock.material else '',
             stock.quantity,
             stock.unit_type,
             stock.min_stock,
             stock.max_stock,
             stock.last_movement.strftime('%Y-%m-%d %H:%M') if stock.last_movement else ''
         ])
-    
+
     output.seek(0)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f'inventario_stock_{timestamp}.csv'
-    
+
     return send_file(
         io.BytesIO(output.getvalue().encode('utf-8-sig')),
         mimetype='text/csv; charset=utf-8-sig',
         as_attachment=True,
         download_name=filename
     )
+
     
 @bp.route('/inventory/stock/<int:stock_id>/delete', methods=['POST'])
 @login_required
