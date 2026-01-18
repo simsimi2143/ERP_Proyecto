@@ -24,7 +24,8 @@
                         
                         <div class="col-md-4">
                             <label for="id_supplier" class="form-label">Proveedor *</label>
-                            <select class="form-select" id="id_supplier" name="id_supplier" required>
+                            <select class="form-select" id="id_supplier" name="id_supplier" required 
+                                    {% if order.status == 'Recibida' or order.status == 'Cancelada' %}disabled{% endif %}>
                                 <option value="">Seleccionar proveedor...</option>
                                 {% for supplier in suppliers %}
                                     <option value="{{ supplier.id_suplier }}" 
@@ -33,11 +34,15 @@
                                     </option>
                                 {% endfor %}
                             </select>
+                            {% if order.status == 'Recibida' or order.status == 'Cancelada' %}
+                            <input type="hidden" name="id_supplier" value="{{ order.id_supplier }}">
+                            {% endif %}
                         </div>
 
                         <div class="col-md-4">
                             <label for="currency" class="form-label">Moneda *</label>
-                            <select class="form-select" id="currency" name="currency" required>
+                            <select class="form-select" id="currency" name="currency" required
+                                    {% if order.status == 'Recibida' or order.status == 'Cancelada' %}disabled{% endif %}>
                                 <option value="">Seleccionar moneda...</option>
                                 {% for currency in currencies %}
                                     <option value="{{ currency.symbol }}" 
@@ -46,35 +51,62 @@
                                     </option>
                                 {% endfor %}
                             </select>
+                            {% if order.status == 'Recibida' or order.status == 'Cancelada' %}
+                            <input type="hidden" name="currency" value="{{ order.currency }}">
+                            {% endif %}
                         </div>
 
                         <div class="col-md-4">
                             <label for="issue_date" class="form-label">Fecha Emisión *</label>
                             <input type="date" class="form-control" id="issue_date" name="issue_date" 
-                                   value="{{ order.issue_date.strftime('%Y-%m-%d') }}" required>
+                                   value="{{ order.issue_date.strftime('%Y-%m-%d') }}" required
+                                   {% if order.status == 'Recibida' or order.status == 'Cancelada' %}readonly{% endif %}>
                         </div>
 
                         <div class="col-md-4">
                             <label for="estimated_delivery_date" class="form-label">Fecha Entrega Estimada *</label>
                             <input type="date" class="form-control" id="estimated_delivery_date" name="estimated_delivery_date" 
-                                   value="{{ order.estimated_delivery_date.strftime('%Y-%m-%d') }}" required>
+                                   value="{{ order.estimated_delivery_date.strftime('%Y-%m-%d') }}" required
+                                   {% if order.status == 'Recibida' or order.status == 'Cancelada' %}readonly{% endif %}>
                         </div>
 
                         <div class="col-md-4">
                             <label for="status" class="form-label">Estado *</label>
-                            <select class="form-select" id="status" name="status" required>
-                                <option value="Pendiente" {% if order.status == 'Pendiente' %}selected{% endif %}>Pendiente</option>
-                                <option value="Aprobada" {% if order.status == 'Aprobada' %}selected{% endif %}>Aprobada</option>
-                                <option value="Enviada" {% if order.status == 'Enviada' %}selected{% endif %}>Enviada</option>
-                                <option value="Recibida" {% if order.status == 'Recibida' %}selected{% endif %}>Recibida</option>
-                                <option value="Cancelada" {% if order.status == 'Cancelada' %}selected{% endif %}>Cancelada</option>
-                            </select>
+                            {% if order.status == 'Recibida' %}
+                                <!-- Solo mostrar Cancelada como opción cuando el estado actual es Recibida -->
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="Recibida" selected>Recibida</option>
+                                    <option value="Cancelada">Cancelada</option>
+                                </select>
+                                <div class="form-text text-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> 
+                                    La orden ya ha sido recibida. Solo puede cambiar el estado a "Cancelada".
+                                </div>
+                            {% elif order.status == 'Cancelada' %}
+                                <!-- No permitir cambios si ya está cancelada -->
+                                <input type="text" class="form-control bg-light" value="Cancelada" readonly>
+                                <input type="hidden" name="status" value="Cancelada">
+                                <div class="form-text text-danger">
+                                    <i class="fas fa-ban"></i> 
+                                    La orden está cancelada y no puede ser modificada.
+                                </div>
+                            {% else %}
+                                <!-- Mostrar todas las opciones para otros estados -->
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="Pendiente" {% if order.status == 'Pendiente' %}selected{% endif %}>Pendiente</option>
+                                    <option value="Aprobada" {% if order.status == 'Aprobada' %}selected{% endif %}>Aprobada</option>
+                                    <option value="Enviada" {% if order.status == 'Enviada' %}selected{% endif %}>Enviada</option>
+                                    <option value="Recibida" {% if order.status == 'Recibida' %}selected{% endif %}>Recibida</option>
+                                    <option value="Cancelada" {% if order.status == 'Cancelada' %}selected{% endif %}>Cancelada</option>
+                                </select>
+                            {% endif %}
                         </div>
 
                         <div class="col-12">
                             <label for="notes" class="form-label">Notas</label>
                             <textarea class="form-control" id="notes" name="notes" 
-                                      rows="3" placeholder="Notas adicionales...">{{ order.notes or '' }}</textarea>
+                                      rows="3" placeholder="Notas adicionales..."
+                                      {% if order.status == 'Cancelada' %}readonly{% endif %}>{{ order.notes or '' }}</textarea>
                         </div>
                     </div>
 
@@ -85,9 +117,16 @@
                                 <h6 class="mb-0">
                                     <i class="fas fa-list"></i> Líneas de la Orden
                                 </h6>
+                                {% if order.status != 'Recibida' and order.status != 'Cancelada' %}
                                 <button type="button" class="btn btn-sm btn-success" id="addLineBtn">
                                     <i class="fas fa-plus"></i> Agregar Línea
                                 </button>
+                                {% else %}
+                                <button type="button" class="btn btn-sm btn-success" id="addLineBtn" disabled>
+                                    <i class="fas fa-plus"></i> Agregar Línea
+                                </button>
+                                <span class="text-muted ms-2">Las líneas no pueden modificarse en este estado</span>
+                                {% endif %}
                             </div>
                             
                             <div class="table-responsive">
@@ -101,7 +140,9 @@
                                             <th width="15%">Precio Unitario *</th>
                                             <th width="15%">Moneda *</th>
                                             <th width="15%">Subtotal</th>
+                                            {% if order.status != 'Recibida' and order.status != 'Cancelada' %}
                                             <th width="5%">Acciones</th>
+                                            {% endif %}
                                         </tr>
                                     </thead>
                                     <tbody id="linesBody">
@@ -109,7 +150,8 @@
                                         <tr id="line_{{ loop.index }}">
                                             <td>{{ loop.index }}</td>
                                             <td>
-                                                <select class="form-select material-select" name="id_material_{{ loop.index }}" required>
+                                                <select class="form-select material-select" name="id_material_{{ loop.index }}" required
+                                                        {% if order.status == 'Recibida' or order.status == 'Cancelada' %}disabled{% endif %}>
                                                     <option value="">Seleccionar material...</option>
                                                     {% for material in materials %}
                                                         <option value="{{ material.id_material }}" data-unit="{{ material.unit }}"
@@ -121,7 +163,8 @@
                                             </td>
                                             <td>
                                                 <input type="number" class="form-control quantity" name="quantity_{{ loop.index }}" 
-                                                       min="1" value="{{ line.quantity }}" required>
+                                                       min="1" value="{{ line.quantity }}" required
+                                                       {% if order.status == 'Recibida' or order.status == 'Cancelada' %}readonly{% endif %}>
                                             </td>
                                             <td>
                                                 <input type="text" class="form-control unit" name="unit_material_{{ loop.index }}" 
@@ -129,10 +172,12 @@
                                             </td>
                                             <td>
                                                 <input type="number" class="form-control price" name="price_{{ loop.index }}" 
-                                                       step="0.01" min="0" value="{{ line.price }}" required>
+                                                       step="0.01" min="0" value="{{ line.price }}" required
+                                                       {% if order.status == 'Recibida' or order.status == 'Cancelada' %}readonly{% endif %}>
                                             </td>
                                             <td>
-                                                <select class="form-select currency" name="currency_suppliers_{{ loop.index }}" required>
+                                                <select class="form-select currency" name="currency_suppliers_{{ loop.index }}" required
+                                                        {% if order.status == 'Recibida' or order.status == 'Cancelada' %}disabled{% endif %}>
                                                     <option value="">Seleccionar...</option>
                                                     {% for currency in currencies %}
                                                         <option value="{{ currency.symbol }}"
@@ -145,20 +190,22 @@
                                             <td>
                                                 <span class="subtotal">{{ "%.2f"|format(line.quantity * line.price) }}</span>
                                             </td>
+                                            {% if order.status != 'Recibida' and order.status != 'Cancelada' %}
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-danger remove-line" 
                                                         data-line="{{ loop.index }}">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
+                                            {% endif %}
                                         </tr>
                                         {% endfor %}
                                     </tbody>
                                     <tfoot>
                                         <tr>
-                                            <td colspan="6" class="text-end"><strong>Total:</strong></td>
+                                            <td colspan="{% if order.status != 'Recibida' and order.status != 'Cancelada' %}7{% else %}6{% endif %}" 
+                                                class="text-end"><strong>Total:</strong></td>
                                             <td><strong id="totalAmount">{{ "%.2f"|format(order.total_amount) }}</strong></td>
-                                            <td></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -169,9 +216,15 @@
                     <div class="row mt-4">
                         <div class="col-12">
                             <input type="hidden" id="line_count" name="line_count" value="{{ lines|length }}">
+                            {% if order.status == 'Cancelada' %}
+                            <button type="button" class="btn btn-primary" disabled>
+                                <i class="fas fa-ban"></i> Orden Cancelada - No Editable
+                            </button>
+                            {% else %}
                             <button type="submit" class="btn btn-primary" id="submitBtn">
                                 <i class="fas fa-save"></i> Actualizar Orden de Compra
                             </button>
+                            {% endif %}
                             <a href="{{ url_for('purchases.purchase_detail', order_id=order.id_purchase_order) }}" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> Cancelar
                             </a>
@@ -186,8 +239,6 @@
 
 {% block scripts %}
 <script>
-
-    
 // Sistema de gestión de líneas de orden de compra
 class PurchaseOrderLines {
     constructor() {
@@ -201,11 +252,18 @@ class PurchaseOrderLines {
     }
     
     init() {
-        // Event listener para el botón de agregar línea
-        document.getElementById('addLineBtn').addEventListener('click', () => this.addLine());
-        
-        // Inicializar event listeners en las líneas existentes
-        this.initializeExistingLines();
+        // Solo inicializar eventos si la orden no está en estado Recibida o Cancelada
+        const currentStatus = "{{ order.status }}";
+        if (currentStatus !== 'Recibida' && currentStatus !== 'Cancelada') {
+            // Event listener para el botón de agregar línea
+            const addLineBtn = document.getElementById('addLineBtn');
+            if (addLineBtn) {
+                addLineBtn.addEventListener('click', () => this.addLine());
+            }
+            
+            // Inicializar event listeners en las líneas existentes
+            this.initializeExistingLines();
+        }
     }
     
     initializeExistingLines() {
@@ -337,7 +395,9 @@ class PurchaseOrderLines {
             
             // Actualizar botón remove
             const removeBtn = row.querySelector('.remove-line');
-            removeBtn.setAttribute('data-line', lineNumber);
+            if (removeBtn) {
+                removeBtn.setAttribute('data-line', lineNumber);
+            }
         });
         
         this.lineCountInput.value = this.lineCounter;
@@ -378,13 +438,32 @@ class PurchaseOrderLines {
         this.totalAmountElement.textContent = total.toFixed(2);
         
         // Validar que haya al menos una línea
-        this.submitBtn.disabled = this.lineCounter === 0;
+        if (this.submitBtn) {
+            this.submitBtn.disabled = this.lineCounter === 0;
+        }
     }
 }
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    new PurchaseOrderLines();
+    const currentStatus = "{{ order.status }}";
+    
+    // Solo inicializar la gestión de líneas si no está en estado Recibida o Cancelada
+    if (currentStatus !== 'Recibida' && currentStatus !== 'Cancelada') {
+        new PurchaseOrderLines();
+    } else {
+        // Deshabilitar completamente el botón de enviar si está cancelada
+        if (currentStatus === 'Cancelada') {
+            const form = document.getElementById('purchaseForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('La orden está cancelada y no puede ser modificada.');
+                    return false;
+                });
+            }
+        }
+    }
 });
 </script>
 {% endblock %}
