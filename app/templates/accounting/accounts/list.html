@@ -18,6 +18,12 @@
 {% endblock %}
 
 {% block accounting_content %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> <strong>Guía rápida:</strong><br>
+    • Si quieres <strong>Eliminar</strong> una Cuenta: La cuenta de dinero (Caja/Banco) no debe tener movimientos asociados <strong>SALIDA</strong>.<br>
+    • Las <strong>Cuentas</strong> que presenten movimientos tendran <strong>desabilitado</strong> el boton para eliminar.<br>
+    • <strong>Recuerda:</strong> que siempre puedes inabilitar una cuenta.
+</div>
 <div class="card mb-4">
     </div>
 
@@ -37,6 +43,7 @@
                         <th>Código</th>
                         <th>Nombre</th>
                         <th>Tipo / Naturaleza</th>
+                        <th class="text-left"> Estado</th>
                         <th class="text-end">Saldo Actual</th>
                         <th>Acciones</th> </tr>
                 </thead>
@@ -49,6 +56,7 @@
                             <small class="badge bg-light text-dark border">{{ account.account_type }}</small><br>
                             <small class="text-muted">{{ account.nature }}</small>
                         </td>
+                        <td>{{ 'cuenta activa' if account.status else 'cuenta inactiva' }}</td>
                         <td class="text-end">
                             <span class="fw-bold {% if account.get_balance() < 0 %}text-danger{% else %}text-success{% endif %}">
                                 $ {{ "{:,.2f}".format(account.get_balance()) }}
@@ -61,11 +69,16 @@
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 
-                                {% if current_user.has_permission('accounting', 3) %}
+                                {% if current_user.has_permission('accounting', 2) %}
+                                {% set has_history = account.items|length > 0 %}
+                                
+                                
                                 <form action="{{ url_for('accounting.account_delete', account_id=account.id_account) }}" 
                                       method="POST" class="d-inline">
+                                      
                                     <button type="submit" class="btn btn-outline-danger" 
-                                            onclick="return confirm('¿Eliminar esta cuenta?')" title="Eliminar">
+                                            {% if has_history %} disabled title="Cuenta con movimientos"  {% endif %}
+                                            onclick="return confirm('¿Está seguro de eliminar la cuenta {{ account.name }}?')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
