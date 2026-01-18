@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, send_file
 from flask_login import login_required, current_user
 from app import db
-from app.models import AccountType, AccountGroup, AccountNature, AccountAccount, Currency, Country
+from app.models import AccountType, AccountGroup, AccountNature, AccountAccount, Currency, Country, JournalEntry, JournalItem
 from app.utils.auth import permission_required
 import csv
 import io
@@ -448,3 +448,60 @@ def get_accounts_json():
     accounts = AccountAccount.query.filter_by(status=True).order_by(AccountAccount.code).all()
     account_list = [{'id': acc.id_account, 'text': f"{acc.code} - {acc.name}"} for acc in accounts]
     return jsonify(account_list)
+
+@bp.route('/accounting/journal/create', methods=['GET', 'POST'])
+@login_required
+@permission_required('accounting', 2)
+def journal_entry_create():
+    accounts = AccountAccount.query.filter_by(status=True).order_by(AccountAccount.code).all()
+    
+    if request.method == 'POST':
+        try:
+            # 1. Obtener datos del formulario
+            date = datetime.strptime(request.form['date'], '%Y-%m-%d')
+            description = request.form['description']
+            
+            # Listas de datos de las líneas (vienen del formulario dinámico)
+            acc_ids = request.form.getlist('account_id[]')
+            debits = request.form.getlist('debit[]')
+            credits = request.form.getlist('credit[]')
+            
+            # 2. Validación de Partida Doble (Cuadre)
+            total_debit = sum(float(d) for d in debits if d)
+            total_credit = sum(float(c) for c in credits if c)
+            
+            if abs(total_debit - total_credit) > 0.001:
+                flash('Error: El asiento no está cuadrado (Debe != Haber).', 'error')
+                return redirect(url_for('accounting.journal_entry_create'))
+
+            # 3. Guardar el asiento
+            entry = JournalEntry(
+                date=date,
+                description=description,
+                created_by=current_user.username
+            )
+            db.session.add(entry)
+            db.session.flush() # Para obtener el ID de entry antes del commit
+
+            for i in range(len(acc_ids)):
+                val_debit = float(debits[i] or 0)
+                val_credit = float(credits[i] or 0)
+                
+                if val_debit > 0 or val_credit > 0:
+                    item = JournalItem(
+                        entry_id=entry.id,
+                        account_id=acc_ids[i],
+                        debit=val_debit,
+                        credit=val_credit
+                    )
+                    db.session.add(item)
+            
+            db.session.commit()
+            flash('Asiento contable registrado exitosamente', 'success')
+            return redirect(url_for('accounting.account_list'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al registrar asiento: {str(e)}', 'error')
+
+    return render_template('accounting/journal/create.html', accounts=accounts)

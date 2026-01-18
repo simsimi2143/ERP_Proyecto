@@ -1,0 +1,118 @@
+{% extends "accounting/base.html" %}
+
+{% block accounting_content %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> <strong>Guía rápida:</strong><br>
+    • Si estás <strong>pagando</strong> algo: La cuenta de dinero (Caja/Banco) va en la columna <strong>SALIDA</strong>.<br>
+    • Si estás <strong>cobrando</strong> algo: La cuenta de dinero (Caja/Banco) va en la columna <strong>ENTRADA</strong>.<br>
+    • <strong>Recuerda:</strong> El total de entradas debe ser igual al total de salidas.
+</div>
+<div class="container-fluid">
+    <form id="journalForm" method="POST">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Crear Nuevo Asiento Contable</h6>
+                <button type="submit" class="btn btn-success" id="btnSubmit">
+                    <i class="fas fa-save"></i> Guardar Asiento
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label">Fecha</label>
+                        <input type="date" name="date" class="form-control" required value="{{ now_date }}">
+                    </div>
+                    <div class="col-md-9">
+                        <label class="form-label">Descripción (Glosa)</label>
+                        <input type="text" name="description" class="form-control" placeholder="Ej: Pago de arriendo mes de Enero" required>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="linesTable">
+                        <thead class="bg-light">
+                            <tr>
+                                <th style="width: 50%;">Cuenta Contable</th>
+                                <th style="width: 20%;" class="text-center text-success">ENTRADA (Aumento)</th> <th style="width: 20%;" class="text-center text-danger">SALIDA (Disminución)</th> <th style="width: 10%;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="linesBody">
+                            </tbody>
+                            
+                        <tfoot>
+                            <tr class="table-secondary fw-bold">
+                                <td class="text-end">¿Está Cuadrado el Movimiento?:</td>
+                                <td id="totalDebe" class="text-end text-success">0.00</td>
+                                <td id="totalHaber" class="text-end text-danger">0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addRow()">
+                        <i class="fas fa-plus"></i> Añadir Línea
+                    </button>
+                </div>
+
+                <div id="diffAlert" class="alert alert-danger mt-3 d-none">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    El asiento está descuadrado por: <span id="diffValue">0.00</span>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Lista de cuentas inyectada desde Flask
+const accounts = [
+    {% for acc in accounts %}
+    { id: "{{ acc.id_account }}", text: "{{ acc.code }} - {{ acc.name }}" },
+    {% endfor %}
+];
+
+function addRow() {
+    const tbody = document.getElementById('linesBody');
+    const row = document.createElement('tr');
+    
+    let options = '<option value="">Seleccione cuenta...</option>';
+    accounts.forEach(acc => {
+        options += `<option value="${acc.id}">${acc.text}</option>`;
+    });
+
+    row.innerHTML = `
+        <td><select name="account_id[]" class="form-select select2" required>${options}</select></td>
+        <td><input type="number" name="debit[]" class="form-control text-end val-input" step="0.01" value="0.00" onchange="calculateTotals()"></td>
+        <td><input type="number" name="credit[]" class="form-control text-end val-input" step="0.01" value="0.00" onchange="calculateTotals()"></td>
+        <td class="text-center"><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); calculateTotals();"><i class="fas fa-trash"></i></button></td>
+    `;
+    tbody.appendChild(row);
+}
+
+function calculateTotals() {
+    let totalDebe = 0;
+    let totalHaber = 0;
+
+    document.getElementsByName('debit[]').forEach(input => totalDebe += parseFloat(input.value || 0));
+    document.getElementsByName('credit[]').forEach(input => totalHaber += parseFloat(input.value || 0));
+
+    document.getElementById('totalDebe').innerText = totalDebe.toLocaleString('en-US', {minimumFractionDigits: 2});
+    document.getElementById('totalHaber').innerText = totalHaber.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+    const diff = Math.abs(totalDebe - totalHaber);
+    const alertDiv = document.getElementById('diffAlert');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    if (diff > 0.001) {
+        alertDiv.classList.remove('d-none');
+        document.getElementById('diffValue').innerText = diff.toFixed(2);
+        btnSubmit.disabled = true;
+    } else {
+        alertDiv.classList.add('d-none');
+        btnSubmit.disabled = (totalDebe === 0); // No permitir guardar si el total es 0
+    }
+}
+
+// Inicializar con 2 filas
+window.onload = () => { addRow(); addRow(); };
+</script>
+{% endblock %}

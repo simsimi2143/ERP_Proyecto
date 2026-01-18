@@ -10,54 +10,17 @@
         <a href="{{ url_for('accounting.export_accounts_csv') }}" class="btn btn-info">
             <i class="fas fa-file-export"></i> Exportar CSV
         </a>
+        <a href="{{ url_for('accounting.journal_entry_create') }}" class="btn btn-primary">
+            <i class="fas fa-file-invoice-dollar"></i> Nuevo Asiento
+        </a>
+                
     {% endif %}
 {% endblock %}
 
 {% block accounting_content %}
-<!-- Filtros -->
 <div class="card mb-4">
-    <div class="card-header">
-        <h5 class="card-title mb-0">
-            <i class="fas fa-filter"></i> Filtros de Búsqueda
-        </h5>
     </div>
-    <div class="card-body">
-        <form method="GET" action="{{ url_for('accounting.account_list') }}">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label for="code" class="form-label">Código</label>
-                    <input type="text" class="form-control" id="code" name="code" 
-                           value="{{ filters.get('code', '') }}" placeholder="Código...">
-                </div>
-                <div class="col-md-3">
-                    <label for="name" class="form-label">Nombre</label>
-                    <input type="text" class="form-control" id="name" name="name" 
-                           value="{{ filters.get('name', '') }}" placeholder="Nombre...">
-                </div>
-                <div class="col-md-3">
-                    <label for="status" class="form-label">Estado</label>
-                    <select class="form-select" id="status" name="status">
-                        <option value="">Todos</option>
-                        <option value="Activo" {% if filters.get('status') == 'Activo' %}selected{% endif %}>Activo</option>
-                        <option value="Inactivo" {% if filters.get('status') == 'Inactivo' %}selected{% endif %}>Inactivo</option>
-                    </select>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search"></i> Aplicar Filtros
-                    </button>
-                    <a href="{{ url_for('accounting.account_list') }}" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Limpiar
-                    </a>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
 
-<!-- Lista de Cuentas -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">
@@ -68,56 +31,44 @@
     <div class="card-body">
         {% if accounts %}
         <div class="table-responsive">
-            <table class="table table-striped table-hover">
+            <table class="table table-striped table-hover align-middle">
                 <thead class="table-dark">
                     <tr>
                         <th>Código</th>
                         <th>Nombre</th>
-                        <th>Tipo</th>
-                        <th>Grupo</th>
-                        <th>Naturaleza</th>
-                        <th>Moneda</th>
-                        <th>País</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
+                        <th>Tipo / Naturaleza</th>
+                        <th class="text-end">Saldo Actual</th>
+                        <th>Acciones</th> </tr>
                 </thead>
                 <tbody>
                     {% for account in accounts %}
                     <tr>
-                        <td>
-                            <strong>{{ account.code }}</strong>
-                            <br><small class="text-muted">{{ account.id_account }}</small>
-                        </td>
+                        <td><strong>{{ account.code }}</strong></td>
                         <td>{{ account.name }}</td>
-                        <td>{{ type_dict.get(account.account_type, account.account_type) }}</td>
-                        <td>{{ group_dict.get(account.account_group, account.account_group) }}</td>
-                        <td>{{ nature_dict.get(account.nature, account.nature) }}</td>
-                        <td>{{ currency_dict.get(account.currency_id, account.currency_id) }}</td>
-                        <td>{{ country_dict.get(account.country_id, account.country_id) }}</td>
                         <td>
-                            {% if account.status %}
-                                <span class="badge bg-success">Activo</span>
-                            {% else %}
-                                <span class="badge bg-danger">Inactivo</span>
-                            {% endif %}
+                            <small class="badge bg-light text-dark border">{{ account.account_type }}</small><br>
+                            <small class="text-muted">{{ account.nature }}</small>
+                        </td>
+                        <td class="text-end">
+                            <span class="fw-bold {% if account.get_balance() < 0 %}text-danger{% else %}text-success{% endif %}">
+                                $ {{ "{:,.2f}".format(account.get_balance()) }}
+                            </span>
                         </td>
                         <td>
-                            <div class="btn-group btn-group-sm" role="group">
-                                {% if current_user.has_permission('accounting', 2) %}
-                                    <a href="{{ url_for('accounting.account_edit', account_id=account.id_account) }}" 
-                                       class="btn btn-outline-warning" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ url_for('accounting.account_delete', account_id=account.id_account) }}" 
-                                          method="POST" class="d-inline">
-                                        <button type="submit" 
-                                                class="btn btn-outline-danger" 
-                                                onclick="return confirm('¿Estás seguro de eliminar esta cuenta contable?')"
-                                                title="Eliminar">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('accounting.account_edit', account_id=account.id_account) }}" 
+                                   class="btn btn-outline-primary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                
+                                {% if current_user.has_permission('accounting', 3) %}
+                                <form action="{{ url_for('accounting.account_delete', account_id=account.id_account) }}" 
+                                      method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger" 
+                                            onclick="return confirm('¿Eliminar esta cuenta?')" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                                 {% endif %}
                             </div>
                         </td>
@@ -127,16 +78,6 @@
             </table>
         </div>
         {% else %}
-        <div class="text-center py-4">
-            <i class="fas fa-calculator fa-3x text-muted mb-3"></i>
-            <h5>No se encontraron cuentas contables</h5>
-            <p class="text-muted">No hay cuentas que coincidan con los filtros aplicados.</p>
-            {% if current_user.has_permission('accounting', 2) %}
-                <a href="{{ url_for('accounting.account_create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Crear Primera Cuenta
-                </a>
-            {% endif %}
-        </div>
         {% endif %}
     </div>
 </div>

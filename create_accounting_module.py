@@ -1,21 +1,33 @@
 from app import create_app, db
-from app.models import AccountType, AccountGroup, AccountNature, Currency, Country
+# Asegúrate de importar tus nuevos modelos aquí
+from app.models import (
+    AccountType, AccountGroup, AccountNature, AccountAccount, 
+    Currency, Country, JournalEntry, JournalItem
+)
 from datetime import datetime
 
-def init_accounting_module():
+def init_accounting_module(reset_data=False):
     """
     Script para inicializar las tablas del módulo de contabilidad
     """
     app = create_app()
     
     with app.app_context():
-        print("Inicializando módulo de contabilidad...")
+        print("Iniciando actualización del módulo de contabilidad...")
         
-        # Crear tablas si no existen
+        if reset_data:
+            print("⚠️ CUIDADO: Eliminando tablas existentes para reinicio total...")
+            # Esto eliminará los datos. Úsalo solo si quieres empezar de cero.
+            db.drop_all()
+            print("✓ Tablas eliminadas")
+
+        # Este comando crea todas las tablas definidas en models.py que no existan
+        # Esto solucionará el error 'no such table: journal_item'
         db.create_all()
+        print("✓ Estructura de tablas verificada/creada")
         
-        # Crear tipos de cuenta por defecto
-        print("Creando tipos de cuenta...")
+        # 1. Crear tipos de cuenta por defecto
+        print("Sincronizando tipos de cuenta...")
         default_account_types = [
             {'id_account_type': 'ACT-CIRCULANTE', 'name': 'Activo Circulante', 'description': 'Activos que se esperan convertir en efectivo dentro de un año'},
             {'id_account_type': 'ACT-FIJO', 'name': 'Activo Fijo', 'description': 'Activos de larga duración'},
@@ -38,11 +50,8 @@ def init_accounting_module():
                 )
                 db.session.add(account_type)
         
-        db.session.commit()
-        print("✓ Tipos de cuenta creados")
-        
-        # Crear grupos de cuenta por defecto
-        print("Creando grupos de cuenta...")
+        # 2. Crear grupos de cuenta por defecto
+        print("Sincronizando grupos de cuenta...")
         default_account_groups = [
             {'id_account_group': 'GRP-ACTIVO', 'name': 'Grupo Activo', 'code_prefix': '1', 'description': 'Grupo de cuentas de activo'},
             {'id_account_group': 'GRP-PASIVO', 'name': 'Grupo Pasivo', 'code_prefix': '2', 'description': 'Grupo de cuentas de pasivo'},
@@ -63,11 +72,8 @@ def init_accounting_module():
                 )
                 db.session.add(account_group)
         
-        db.session.commit()
-        print("✓ Grupos de cuenta creados")
-        
-        # Crear naturalezas de cuenta por defecto
-        print("Creando naturalezas de cuenta...")
+        # 3. Crear naturalezas de cuenta por defecto
+        print("Sincronizando naturalezas de cuenta...")
         default_account_natures = [
             {'id_account_nature': 'DEUDORA', 'name': 'Deudora', 'symbol': 'D', 'effect_on_balance': 'Increase'},
             {'id_account_nature': 'ACREEDORA', 'name': 'Acreedora', 'symbol': 'A', 'effect_on_balance': 'Decrease'},
@@ -86,20 +92,13 @@ def init_accounting_module():
                 db.session.add(account_nature)
         
         db.session.commit()
-        print("✓ Naturalezas de cuenta creadas")
         
         print("\n" + "="*50)
-        print("✅ MÓDULO DE CONTABILIDAD INICIALIZADO EXITOSAMENTE")
+        print("✅ MÓDULO DE CONTABILIDAD ACTUALIZADO")
         print("="*50)
-        print(f"📊 Tipos de cuenta: {AccountType.query.count()}")
-        print(f"📋 Grupos de cuenta: {AccountGroup.query.count()}")
-        print(f"⚖️ Naturalezas de cuenta: {AccountNature.query.count()}")
-        
-        print("\n🎯 Próximos pasos:")
-        print("   1. Accede al módulo de contabilidad desde el dashboard")
-        print("   2. Revisa los tipos, grupos y naturalezas creadas")
-        print("   3. Crea las cuentas contables principales")
-        print("   4. Configura el plan de cuentas de tu empresa")
+        print(f"📊 Tipos: {AccountType.query.count()} | Grupos: {AccountGroup.query.count()} | Naturalezas: {AccountNature.query.count()}")
+        print("🚀 Las tablas de Asientos y Apuntes ya están listas.")
 
 if __name__ == '__main__':
-    init_accounting_module()
+    # Cambia a True si quieres borrar todo y empezar de cero
+    init_accounting_module(reset_data=False)

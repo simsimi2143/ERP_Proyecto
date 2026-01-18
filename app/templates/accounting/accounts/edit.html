@@ -5,124 +5,119 @@
 {% block accounting_content %}
 <div class="row">
     <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
                 <h5 class="card-title mb-0">
-                    <i class="fas fa-edit"></i> Editar Cuenta Contable
+                    <i class="fas fa-edit"></i> Configuración de la Cuenta
                 </h5>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('accounting.account_edit', account_id=account.id_account) }}">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="id_account" class="form-label">ID Cuenta</label>
-                            <input type="text" class="form-control" id="id_account" 
-                                   value="{{ account.id_account }}" readonly>
-                            <div class="form-text">Identificador único de la cuenta (no editable)</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="code" class="form-label">Código *</label>
-                            <input type="text" class="form-control" id="code" name="code" 
-                                   required maxlength="50" value="{{ account.code }}">
-                            <div class="form-text">Código contable (jerárquico)</div>
-                        </div>
-                        <div class="col-md-12">
-                            <label for="name" class="form-label">Nombre *</label>
-                            <input type="text" class="form-control" id="name" name="name" 
-                                   required maxlength="200" value="{{ account.name }}">
-                        </div>
-                        <div class="col-md-12">
-                            <label for="description" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="description" name="description" rows="3">{{ account.description or '' }}</textarea>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">ID Cuenta</label>
+                            <input type="text" class="form-control bg-light" value="{{ account.id_account }}" readonly>
+                            <small class="text-muted">No editable</small>
                         </div>
                         <div class="col-md-4">
-                            <label for="account_type" class="form-label">Tipo de Cuenta *</label>
-                            <select class="form-select" id="account_type" name="account_type" required>
-                                <option value="">Seleccionar tipo...</option>
+                            <label for="code" class="form-label fw-bold">Código *</label>
+                            <input type="text" class="form-control" id="code" name="code" value="{{ account.code }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="name" class="form-label fw-bold">Nombre de la Cuenta *</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ account.name }}" required>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="alert alert-secondary border-primary">
+                                <label class="form-label fw-bold text-primary">
+                                    <i class="fas fa-exchange-alt"></i> ¿Cómo se comporta esta cuenta?
+                                </label>
+                                <select name="nature" class="form-select form-select-lg" required>
+                                    <option value="DEUDORA" {% if account.nature == 'DEUDORA' %}selected{% endif %}>
+                                        📈 ENTRADA / AUMENTO (Ej: Caja, Bancos, Gastos)
+                                    </option>
+                                    <option value="ACREEDORA" {% if account.nature == 'ACREEDORA' %}selected{% endif %}>
+                                        📉 SALIDA / ORIGEN (Ej: Ventas, Deudas, Capital)
+                                    </option>
+                                </select>
+                                <small class="text-dark">Selecciona "ENTRADA" si la cuenta representa dinero que tienes o gastos. Selecciona "SALIDA" si representa ingresos o deudas.</small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Tipo de Cuenta</label>
+                            <select name="account_type" class="form-select" required>
                                 {% for type in account_types %}
-                                    <option value="{{ type.id_account_type }}" 
-                                            {% if account.account_type == type.id_account_type %}selected{% endif %}>
+                                    <option value="{{ type.id_account_type }}" {% if account.account_type == type.id_account_type %}selected{% endif %}>
                                         {{ type.name }}
                                     </option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label for="account_group" class="form-label">Grupo de Cuenta *</label>
-                            <select class="form-select" id="account_group" name="account_group" required>
-                                <option value="">Seleccionar grupo...</option>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Grupo de Cuenta</label>
+                            <select name="account_group" class="form-select" required>
                                 {% for group in account_groups %}
-                                    <option value="{{ group.id_account_group }}" 
-                                            {% if account.account_group == group.id_account_group %}selected{% endif %}>
+                                    <option value="{{ group.id_account_group }}" {% if account.account_group == group.id_account_group %}selected{% endif %}>
                                         {{ group.name }}
                                     </option>
                                 {% endfor %}
                             </select>
                         </div>
+
                         <div class="col-md-4">
-                            <label for="nature" class="form-label">Naturaleza *</label>
-                            <select class="form-select" id="nature" name="nature" required>
-                                <option value="">Seleccionar naturaleza...</option>
-                                {% for nature in account_natures %}
-                                    <option value="{{ nature.id_account_nature }}" 
-                                            {% if account.nature == nature.id_account_nature %}selected{% endif %}>
-                                        {{ nature.name }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="currency_id" class="form-label">Moneda *</label>
-                            <select class="form-select" id="currency_id" name="currency_id" required>
-                                <option value="">Seleccionar moneda...</option>
+                            <label class="form-label fw-bold">Moneda</label>
+                            <select name="currency_id" class="form-select">
                                 {% for currency in currencies %}
-                                    <option value="{{ currency.symbol }}" 
-                                            {% if account.currency_id == currency.symbol %}selected{% endif %}>
+                                    <option value="{{ currency.id_currency }}" {% if account.currency_id == currency.id_currency %}selected{% endif %}>
                                         {{ currency.name }} ({{ currency.symbol }})
                                     </option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label for="country_id" class="form-label">País *</label>
-                            <select class="form-select" id="country_id" name="country_id" required>
-                                <option value="">Seleccionar país...</option>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">País</label>
+                            <select name="country_id" class="form-select">
                                 {% for country in countries %}
-                                    <option value="{{ country.symbol }}" 
-                                            {% if account.country_id == country.symbol %}selected{% endif %}>
+                                    <option value="{{ country.id_country }}" {% if account.country_id == country.id_country %}selected{% endif %}>
                                         {{ country.name }}
                                     </option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label for="parent_account" class="form-label">Cuenta Padre</label>
-                            <select class="form-select" id="parent_account" name="parent_account">
-                                <option value="">Ninguna (cuenta raíz)</option>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Cuenta Padre</label>
+                            <select name="parent_account" class="form-select">
+                                <option value="">Ninguna (Cuenta Raíz)</option>
                                 {% for parent in parent_accounts %}
-                                    <option value="{{ parent.id_account }}" 
-                                            {% if account.parent_account == parent.id_account %}selected{% endif %}>
+                                    {% if parent.id_account != account.id_account %}
+                                    <option value="{{ parent.id_account }}" {% if account.parent_account == parent.id_account %}selected{% endif %}>
                                         {{ parent.code }} - {{ parent.name }}
                                     </option>
+                                    {% endif %}
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-check mt-4 pt-2">
-                                <input class="form-check-input" type="checkbox" id="status" name="status" 
-                                       {% if account.status %}checked{% endif %}>
-                                <label class="form-check-label" for="status">
-                                    Activa
-                                </label>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Descripción</label>
+                            <textarea name="description" class="form-control" rows="2">{{ account.description }}</textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="status" name="status" {% if account.status %}checked{% endif %}>
+                                <label class="form-check-label fw-bold" for="status">¿La cuenta está activa?</label>
                             </div>
                         </div>
                     </div>
+
                     <div class="row mt-4">
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Actualizar Cuenta
+                        <div class="col-12 border-top pt-3">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save"></i> Guardar Cambios
                             </button>
-                            <a href="{{ url_for('accounting.account_list') }}" class="btn btn-secondary">
+                            <a href="{{ url_for('accounting.account_list') }}" class="btn btn-secondary px-4">
                                 <i class="fas fa-times"></i> Cancelar
                             </a>
                         </div>

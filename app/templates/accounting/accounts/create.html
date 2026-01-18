@@ -36,29 +36,37 @@
                             <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                         </div>
                         <div class="col-md-4">
-                            <label for="account_type" class="form-label">Tipo de Cuenta *</label>
-                            <select class="form-select" id="account_type" name="account_type" required>
-                                <option value="">Seleccionar tipo...</option>
+                            <label class="form-label">Tipo de Cuenta *</label>
+                            <select name="account_type" class="form-select" required>
                                 {% for type in account_types %}
-                                    <option value="{{ type.id_account_type }}">{{ type.name }}</option>
+                                    <option value="{{ type.id_account_type }}" 
+                                        {% if account and account.account_type == type.id_account_type %}selected{% endif %}>
+                                        {{ type.name }}
+                                    </option>
                                 {% endfor %}
                             </select>
                         </div>
+                        
                         <div class="col-md-4">
-                            <label for="account_group" class="form-label">Grupo de Cuenta *</label>
-                            <select class="form-select" id="account_group" name="account_group" required>
-                                <option value="">Seleccionar grupo...</option>
+                            <label class="form-label">Grupo de Cuenta *</label>
+                            <select name="account_group" class="form-select" required>
                                 {% for group in account_groups %}
-                                    <option value="{{ group.id_account_group }}">{{ group.name }}</option>
+                                    <option value="{{ group.id_account_group }}"
+                                        {% if account and account.account_group == group.id_account_group %}selected{% endif %}>
+                                        {{ group.name }}
+                                    </option>
                                 {% endfor %}
                             </select>
                         </div>
+                        
                         <div class="col-md-4">
-                            <label for="nature" class="form-label">Naturaleza *</label>
-                            <select class="form-select" id="nature" name="nature" required>
-                                <option value="">Seleccionar naturaleza...</option>
+                            <label class="form-label">Naturaleza *</label>
+                            <select name="nature" class="form-select" required>
                                 {% for nature in account_natures %}
-                                    <option value="{{ nature.id_account_nature }}">{{ nature.name }}</option>
+                                    <option value="{{ nature.id_account_nature }}"
+                                        {% if account and account.nature == nature.id_account_nature %}selected{% endif %}>
+                                        {{ nature.name }}
+                                    </option>
                                 {% endfor %}
                             </select>
                         </div>

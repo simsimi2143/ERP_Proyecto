@@ -463,4 +463,44 @@ class AccountAccount(db.Model):
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
             'created_by': self.created_by
-        }             
+        }  
+                   
+    # NUEVA RELACIÓN: Para acceder a los movimientos desde la cuenta
+    items = db.relationship('JournalItem', backref='account', lazy=True)
+
+    def get_balance(self):
+        """Calcula el saldo dinámico basado en la naturaleza de la cuenta"""
+        # Sumamos todos los débitos y créditos registrados en 'journal_item'
+        total_debit = sum(item.debit for item in self.items)
+        total_credit = sum(item.credit for item in self.items)
+        
+        # Lógica según la naturaleza que definiste
+        # Si es DEUDORA: Debe - Haber | Si es ACREEDORA: Haber - Debe
+        if self.nature == 'DEUDORA': 
+            return total_debit - total_credit
+        else:
+            return total_credit - total_debit
+
+class JournalEntry(db.Model):
+    """Encabezado del Asiento Contable (La transacción)"""
+    __tablename__ = 'journal_entry'
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    description = db.Column(db.String(255), nullable=False) # Glosa o detalle
+    reference = db.Column(db.String(50)) # Nro de factura o documento
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.String(100))
+    
+    # Relación uno a muchos con las líneas del asiento
+    items = db.relationship('JournalItem', backref='entry', cascade="all, delete-orphan")
+
+class JournalItem(db.Model):
+    """Líneas del Asiento (Apuntes contables individuales)"""
+    __tablename__ = 'journal_item'
+    id = db.Column(db.Integer, primary_key=True)
+    entry_id = db.Column(db.Integer, db.ForeignKey('journal_entry.id'), nullable=False)
+    account_id = db.Column(db.String(50), db.ForeignKey('account_account.id_account'), nullable=False)
+    
+    # Usamos Numeric para evitar errores de redondeo en dinero
+    debit = db.Column(db.Numeric(15, 2), default=0.0)
+    credit = db.Column(db.Numeric(15, 2), default=0.0)       
