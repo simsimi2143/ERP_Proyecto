@@ -527,7 +527,7 @@
                         {{ 'Acceso completo' if current_user.has_permission('sales', 2) else 'Solo lectura' }}
                     </span>
                 </div>
-                <a href="#" class="btn btn-success w-100">
+                <a href="{{ url_for('sales.sale_list') }}" class="btn btn-success w-100">
                     <i class="fas fa-shopping-bag me-2"></i>Acceder al Módulo
                 </a>
             </div>

@@ -20,6 +20,8 @@ def create_app():
     from app.routes.purchases import bp as purchases_bp # compras
     from app.routes.inventory import bp as inventory_bp # inventario
     from app.routes.accounting import bp as accounting_bp # contabiliadad
+    from app.routes.sales import bp as sales_bp # Ventas
+    app.register_blueprint(sales_bp) # Ventas
     app.register_blueprint(accounting_bp) # contabiliadad
     app.register_blueprint(inventory_bp) # inventario
     app.register_blueprint(purchases_bp) # compras

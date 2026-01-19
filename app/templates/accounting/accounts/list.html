@@ -56,10 +56,16 @@
                             <small class="badge bg-light text-dark border">{{ account.account_type }}</small><br>
                             <small class="text-muted">{{ account.nature }}</small>
                         </td>
-                        <td>{{ 'cuenta activa' if account.status else 'cuenta inactiva' }}</td>
+                        <td>
+                            {% if account.status %}
+                                <span class="badge bg-success">Activa</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactiva</span>
+                            {% endif %}
+                        </td>
                         <td class="text-end">
                             <span class="fw-bold {% if account.get_balance() < 0 %}text-danger{% else %}text-success{% endif %}">
-                                $ {{ "{:,.2f}".format(account.get_balance()) }}
+                                $ {{ "%.2f"|format(account.balance) }}
                             </span>
                         </td>
                         <td>

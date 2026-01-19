@@ -503,4 +503,33 @@ class JournalItem(db.Model):
     
     # Usamos Numeric para evitar errores de redondeo en dinero
     debit = db.Column(db.Numeric(15, 2), default=0.0)
-    credit = db.Column(db.Numeric(15, 2), default=0.0)       
+    credit = db.Column(db.Numeric(15, 2), default=0.0)  
+
+#------------------------------- Modulo de ventas ---------------------------------------------
+class SaleOrder(db.Model):
+    """Cabecera de la Venta"""
+    __tablename__ = 'sale_order'
+    id = db.Column(db.Integer, primary_key=True)
+    id_sale_order = db.Column(db.String(50), unique=True, nullable=False) # ID personalizado
+    id_customer = db.Column(db.String(50), db.ForeignKey('customer.id_customer'), nullable=False)
+    issue_date = db.Column(db.Date, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='en tramite') # en tramite, enviado, aprobado, recibido
+    total_amount = db.Column(db.Float, default=0.0)
+    currency = db.Column(db.String(10), nullable=False)
+    customer_purchase_id = db.Column(db.String(50)) # Orden de compra del cliente
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.String(100))
+    
+    # Relación con el detalle
+    items = db.relationship('SaleOrderLine', backref='sale_order', cascade="all, delete-orphan")
+
+class SaleOrderLine(db.Model):
+    """Detalle de la Venta"""
+    __tablename__ = 'sale_order_line'
+    id = db.Column(db.Integer, primary_key=True)
+    id_sale_order = db.Column(db.String(50), db.ForeignKey('sale_order.id_sale_order'))
+    id_material = db.Column(db.String(50), db.ForeignKey('material.id_material'))
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_price = db.Column(db.Float, nullable=False)
+    subtotal = db.Column(db.Float, nullable=False)         

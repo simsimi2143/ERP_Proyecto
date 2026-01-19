@@ -6,6 +6,7 @@ from app.utils.auth import permission_required, superuser_required
 
 bp = Blueprint('users', __name__)
 
+@bp.route('/',methods=['GET', 'POST'])
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':

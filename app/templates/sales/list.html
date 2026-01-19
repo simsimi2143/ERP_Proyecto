@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Módulo de Ventas</h2>
+    <a href="{{ url_for('sales.sale_create') }}" class="btn btn-primary mb-3">Nueva Venta</a>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID Venta</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id_sale_order }}</td>
+                <td>{{ order.id_customer }}</td>
+                <td>{{ order.issue_date }}</td>
+                <td>${{ order.total_amount }}</td>
+                <td><span class="badge bg-info">{{ order.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

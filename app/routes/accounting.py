@@ -7,6 +7,7 @@ from app.utils.auth import permission_required
 import csv
 import io
 from datetime import datetime
+from sqlalchemy import func
 
 bp = Blueprint('accounting', __name__)
 
@@ -241,47 +242,22 @@ def account_nature_delete(nature_id):
 @login_required
 @permission_required('accounting', 1)
 def account_list():
-    # Obtener parámetros de filtro
-    code_filter = request.args.get('code', '')
-    name_filter = request.args.get('name', '')
-    status_filter = request.args.get('status', '')
-    
-    query = AccountAccount.query
-    
-    if code_filter:
-        query = query.filter(AccountAccount.code.contains(code_filter))
-    if name_filter:
-        query = query.filter(AccountAccount.name.contains(name_filter))
-    if status_filter:
-        if status_filter == 'Activo':
-            query = query.filter(AccountAccount.status == True)
-        elif status_filter == 'Inactivo':
-            query = query.filter(AccountAccount.status == False)
-    
-    accounts = query.order_by(AccountAccount.code).all()
-    
-    # Obtener datos para mostrar nombres en lugar de IDs
-    account_types = AccountType.query.all()
-    account_groups = AccountGroup.query.all()
-    account_natures = AccountNature.query.all()
-    currencies = Currency.query.all()
-    countries = Country.query.all()
-    
-    # Crear diccionarios para mapear IDs a nombres
-    type_dict = {t.id_account_type: t.name for t in account_types}
-    group_dict = {g.id_account_group: g.name for g in account_groups}
-    nature_dict = {n.id_account_nature: n.name for n in account_natures}
-    currency_dict = {c.symbol: f"{c.name} ({c.symbol})" for c in currencies}
-    country_dict = {c.symbol: c.name for c in countries}
-    
-    return render_template('accounting/accounts/list.html', 
-                         accounts=accounts,
-                         type_dict=type_dict,
-                         group_dict=group_dict,
-                         nature_dict=nature_dict,
-                         currency_dict=currency_dict,
-                         country_dict=country_dict,
-                         filters=request.args)
+    results = db.session.query(
+        AccountAccount,
+        func.sum(JournalItem.debit).label('total_debit'),
+        func.sum(JournalItem.credit).label('total_credit')
+    ).outerjoin(JournalItem).group_by(AccountAccount.id).order_by(AccountAccount.id_account).all()
+
+    accounts_with_balance = []
+    for account, total_debit, total_credit in results:
+        # Convertimos explícitamente a float para evitar el choque de tipos
+        debe = float(total_debit) if total_debit is not None else 0.0
+        haber = float(total_credit) if total_credit is not None else 0.0
+        
+        account.balance = debe - haber 
+        accounts_with_balance.append(account)
+
+    return render_template('accounting/accounts/list.html', accounts=accounts_with_balance)
 
 @bp.route('/accounting/accounts/create', methods=['GET', 'POST'])
 @login_required
