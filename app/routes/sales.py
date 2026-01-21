@@ -126,7 +126,7 @@ def sale_create():
             # Línea de Débito (Entrada de dinero / CxC)
             item_debit = JournalItem(
                 entry_id=entry.id,
-                account_id=int(acc_debit_id),
+                account_id=acc_debit_id,
                 debit=total_sale,
                 credit=0.0
             )
@@ -135,7 +135,7 @@ def sale_create():
             # Línea de Crédito (Venta / Ingreso)
             item_credit = JournalItem(
                 entry_id=entry.id,
-                account_id=int(acc_credit_id),
+                account_id=acc_credit_id,
                 debit=0.0,
                 credit=total_sale
             )

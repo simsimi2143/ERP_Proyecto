@@ -47,18 +47,24 @@
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Cuenta de Cobro (DEBE - Activo)</label>
                         <select name="acc_debit" class="form-select" required>
-                            {% for a in accounts %}
-                                <option value="{{ a.id }}">{{ a.id_account }} - {{ a.name }}</option>
-                            {% endfor %}
-                        </select>
+    <option value="">Seleccione cuenta débito...</option>
+    {% for account in accounts %}
+    <option value="{{ account.id_account }}">
+        {{ account.code }} - {{ account.name }}
+    </option>
+    {% endfor %}
+</select>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Cuenta de Venta (HABER - Ingreso)</label>
                         <select name="acc_credit" class="form-select" required>
-                            {% for a in accounts %}
-                                <option value="{{ a.id }}">{{ a.id_account }} - {{ a.name }}</option>
-                            {% endfor %}
-                        </select>
+    <option value="">Seleccione cuenta crédito...</option>
+    {% for account in accounts %}
+    <option value="{{ account.id_account }}">
+        {{ account.code }} - {{ account.name }}
+    </option>
+    {% endfor %}
+</select>
                     </div>
                 </div>
                 <div class="mt-3">
